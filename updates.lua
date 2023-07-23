@@ -14,7 +14,7 @@ end
 
 -- Installs an update
 function updates.install()
-
+    return false
 end
 
 return updates

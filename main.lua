@@ -32,22 +32,6 @@ local slot = {
     REG_ACCEPT = 17,
 }
 
--- Scheme of the enderchest inventory:
--- . . . . . . . . .
--- . . . . . . . . .
--- . . . . x x x x x
---         ^ ^ ^ ^ ^
---         | | | | |
---         | | | | Cell storage slot
---         | | | Temporary cell storage slot
---         | | Cell send slot
---         | Teleportation request with endpoint code
---         Teleportation request accept (same item as request)
-
--- Scheme of internal inventory:
---  - first slot - current endpoint
---  - other slots - destination endpoints
-
 local teleporters = {}
 local states = {
     registering_mode = false
