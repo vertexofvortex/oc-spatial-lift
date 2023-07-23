@@ -1,22 +1,45 @@
 local utils = require("utils")
+local cfg = require("config")
 
 local teleportation = {}
 
-function teleportation.initiateTeleportation(transposer, inv, slot, redstone)
+function teleportation.initiateTeleportation(transposer, redstone)
     utils.toggleSpatialIO(redstone)
-    transposer.transferItem(inv.PORT, inv.ENDCHEST, 1, 2, slot.CELL_SEND)
+
+    transposer.transferItem(
+        cfg.transposer_sides.PORT,
+        cfg.transposer_sides.ENDCHEST,
+        1,
+        cfg.port_slots.OUT,
+        cfg.endchest_slots.CELL_SEND)
 
     print("Teleportation...")
 
     return true
 end
 
-function teleportation.acceptTeleportation(transposer, inv, slot, redstone)
+function teleportation.acceptTeleportation(transposer, redstone)
     while true do
-        if transposer.getStackInSlot(inv.ENDCHEST, slot.CELL_SEND) ~= nil then
-            transposer.transferItem(inv.ENDCHEST, inv.PORT, 1, slot.CELL_SEND, 1)
+        if
+            transposer.getStackInSlot(
+                cfg.transposer_sides.ENDCHEST,
+                cfg.endchest_slots.CELL_SEND
+            ) ~= nil then
+            transposer.transferItem(
+                cfg.transposer_sides.ENDCHEST,
+                cfg.transposer_sides.PORT,
+                1,
+                cfg.endchest_slots.CELL_SEND,
+                cfg.port_slots.IN
+            )
             utils.toggleSpatialIO(redstone)
-            transposer.transferItem(inv.PORT, inv.ENDCHEST, 1, 2, slot.CELL_STORE)
+            transposer.transferItem(
+                cfg.transposer_sides.PORT,
+                cfg.transposer_sides.ENDCHEST,
+                1,
+                cfg.port_slots.OUT,
+                cfg.endchest_slots.CELL_STORE
+            )
 
             break
         end
@@ -27,8 +50,8 @@ function teleportation.acceptTeleportation(transposer, inv, slot, redstone)
     return true
 end
 
-function teleportation.requestTeleportation(transposer, inv, slot, teleporter_index, redstone)
-    if transposer.getStackInSlot(inv.ENDCHEST, slot.CELL_STORE) == nil then
+function teleportation.requestTeleportation(transposer, teleporter_index, redstone)
+    if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.CELL_STORE) == nil then
         print("The spatial cell is missing. Perhaps someone else is using the teleporter right now?")
 
         return false
@@ -41,20 +64,44 @@ function teleportation.requestTeleportation(transposer, inv, slot, teleporter_in
     end
 
     -- Put the cell into the temporary slot
-    transposer.transferItem(inv.ENDCHEST, inv.ENDCHEST, 1, slot.CELL_STORE, slot.CELL_TEMPSTORE)
+    transposer.transferItem(
+        cfg.transposer_sides.ENDCHEST,
+        cfg.transposer_sides.ENDCHEST,
+        1,
+        cfg.endchest_slots.CELL_STORE,
+        cfg.endchest_slots.CELL_TEMPSTORE
+    )
 
     local ping_timer = 0
 
-    transposer.transferItem(inv.STORAGE, inv.ENDCHEST, 1, teleporter_index, slot.TP_REQUEST)
+    transposer.transferItem(
+        cfg.transposer_sides.STORAGE,
+        cfg.transposer_sides.ENDCHEST,
+        1,
+        teleporter_index,
+        cfg.endchest_slots.TP_REQUEST
+    )
 
     print("Pinging destination endpoint...")
 
     while true do
         if ping_timer >= 5 then
-            transposer.transferItem(inv.ENDCHEST, inv.STORAGE, 1, slot.TP_REQUEST, teleporter_index)
+            transposer.transferItem(
+                cfg.transposer_sides.ENDCHEST,
+                cfg.transposer_sides.STORAGE,
+                1,
+                cfg.endchest_slots.TP_REQUEST,
+                teleporter_index
+            )
 
             -- Put the cell back into the storage slot
-            transposer.transferItem(inv.ENDCHEST, inv.ENDCHEST, 1, slot.CELL_TEMPSTORE, slot.CELL_STORE)
+            transposer.transferItem(
+                cfg.transposer_sides.ENDCHEST,
+                cfg.transposer_sides.ENDCHEST,
+                1,
+                cfg.endchest_slots.CELL_TEMPSTORE,
+                cfg.endchest_slots.CELL_STORE
+            )
 
             print("Connection refused. Destination endpoint is unavailable.")
             print("Check if teleporter is properly working and chunkloaded.")
@@ -62,17 +109,29 @@ function teleportation.requestTeleportation(transposer, inv, slot, teleporter_in
             return false
         end
 
-        if transposer.getStackInSlot(inv.ENDCHEST, slot.TP_ACCEPT) ~= nil then
+        if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.TP_ACCEPT) ~= nil then
             print("Teleportation request accepted by destination endpoint!")
-            transposer.transferItem(inv.ENDCHEST, inv.PORT, 1, slot.CELL_TEMPSTORE, 1)
-            transposer.transferItem(inv.ENDCHEST, inv.STORAGE, 1, slot.TP_ACCEPT, teleporter_index)
+            transposer.transferItem(
+                cfg.transposer_sides.ENDCHEST,
+                cfg.transposer_sides.PORT,
+                1,
+                cfg.endchest_slots.CELL_TEMPSTORE,
+                cfg.port_slots.IN
+            )
+            transposer.transferItem(
+                cfg.transposer_sides.ENDCHEST,
+                cfg.transposer_sides.STORAGE,
+                1,
+                cfg.endchest_slots.TP_ACCEPT,
+                teleporter_index
+            )
 
             print("Teleporting in 3 seconds...")
 
             ---@diagnostic disable-next-line: undefined-field
             os.sleep(3)
 
-            teleportation.initiateTeleportation(transposer, inv, slot, redstone) -- always returns true
+            teleportation.initiateTeleportation(transposer, redstone) -- always returns true
 
             return true
         end
@@ -82,8 +141,8 @@ function teleportation.requestTeleportation(transposer, inv, slot, teleporter_in
     end
 end
 
-function teleportation.checkTeleportationRequests(transposer, inv, slot, teleporters, redstone)
-    local request_item = transposer.getStackInSlot(inv.ENDCHEST, slot.TP_REQUEST)
+function teleportation.checkTeleportationRequests(transposer, teleporters, redstone)
+    local request_item = transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.TP_REQUEST)
 
     if request_item == nil then
         return false
@@ -91,9 +150,14 @@ function teleportation.checkTeleportationRequests(transposer, inv, slot, telepor
 
     if request_item.label == teleporters[1] then
         print("Incoming teleportation request accepted.")
-        transposer.transferItem(inv.ENDCHEST, inv.ENDCHEST, 1, slot.TP_REQUEST, slot.TP_ACCEPT)
+        transposer.transferItem(cfg.transposer_sides.ENDCHEST,
+            cfg.transposer_sides.ENDCHEST,
+            1,
+            cfg.endchest_slots.TP_REQUEST,
+            cfg.endchest_slots.TP_ACCEPT
+        )
 
-        teleportation.acceptTeleportation(transposer, inv, slot, redstone)
+        teleportation.acceptTeleportation(transposer, redstone)
 
         return true
     end

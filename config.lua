@@ -25,6 +25,11 @@ local config = {
         CURRENT_MARKER = 1
     },
 
+    port_slots = {
+        IN = 1,
+        OUT = 2,
+    },
+
     updates = {
         disable_updates = false
     },

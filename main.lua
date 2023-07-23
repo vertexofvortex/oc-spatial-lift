@@ -15,22 +15,7 @@ local registration = require("registration")
 local transposer = component.proxy(component.list("transposer")())
 local redstone = component.proxy(component.list("redstone")())
 
--- Constants
-local inv = {
-    ENDCHEST = sides.top,
-    STORAGE = sides.north,
-    PORT = sides.south,
-}
-
-local slot = {
-    CELL_STORE = 27,
-    CELL_TEMPSTORE = 26,
-    CELL_SEND = 25,
-    TP_REQUEST = 24,
-    TP_ACCEPT = 23,
-    REG_REQUEST = 18,
-    REG_ACCEPT = 17,
-}
+-- Variables
 
 local teleporters = {}
 local states = {
@@ -38,14 +23,14 @@ local states = {
 }
 
 local main_thread = threading.create(function()
-    teleporters = utils.getDestinationTeleporters(transposer, inv)
+    teleporters = utils.getDestinationTeleporters(transposer)
 
     while true do
         local state, traceback = pcall(function()
-            teleportation.checkTeleportationRequests(transposer, inv, slot, teleporters, redstone)
+            teleportation.checkTeleportationRequests(transposer, teleporters, redstone)
 
             if not states.registering_mode then
-                registration.checkRegistrationRequests(transposer, inv, slot)
+                registration.checkRegistrationRequests(transposer)
             end
         end)
 
@@ -81,6 +66,7 @@ local control_thread = threading.create(function()
                 print("Terminating...")
 
                 main_thread:kill()
+                ---@diagnostic disable-next-line: undefined-global
                 control_thread:kill()
             end
         end)
@@ -92,7 +78,7 @@ local control_thread = threading.create(function()
 
         utils.onKeyDown(keyboard, code, "l", function()
             shell.execute("clear")
-            teleporters = utils.getDestinationTeleporters(transposer, inv)
+            teleporters = utils.getDestinationTeleporters(transposer)
 
             print("Available destinations:\n")
 
@@ -112,7 +98,7 @@ local control_thread = threading.create(function()
 
                     utils.onKeyDown(keyboard, code_confirmation, "y", function()
                         print("")
-                        teleportation.requestTeleportation(transposer, inv, slot, teleporter_slot, redstone)
+                        teleportation.requestTeleportation(transposer, teleporter_slot, redstone)
                         print("Teleported successfully!")
 
                         ---@diagnostic disable-next-line: undefined-field
@@ -136,7 +122,7 @@ local control_thread = threading.create(function()
         utils.onKeyDown(keyboard, code, "r", function()
             print("Endpoint registration sequence started (timeout: 5s.)...\n")
 
-            local status = registration.requestRegistration(transposer, inv, slot, states)
+            local status = registration.requestRegistration(transposer, states)
 
             print("\nAdded " .. status .. " new endpoints.")
             print("Press [H] to return to the menu.")
