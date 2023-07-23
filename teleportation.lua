@@ -3,7 +3,7 @@ local cfg = require("config")
 
 local teleportation = {}
 
-function teleportation.initiateTeleportation(transposer, redstone)
+function teleportation.initiate(transposer, redstone)
     utils.toggleSpatialIO(redstone)
 
     transposer.transferItem(
@@ -18,7 +18,7 @@ function teleportation.initiateTeleportation(transposer, redstone)
     return true
 end
 
-function teleportation.acceptTeleportation(transposer, redstone)
+function teleportation.accept(transposer, redstone)
     while true do
         if
             transposer.getStackInSlot(
@@ -50,7 +50,7 @@ function teleportation.acceptTeleportation(transposer, redstone)
     return true
 end
 
-function teleportation.requestTeleportation(transposer, teleporter_index, redstone)
+function teleportation.request(transposer, teleporter_index, redstone)
     if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.CELL_STORE) == nil then
         print("The spatial cell is missing. Perhaps someone else is using the teleporter right now?")
 
@@ -131,7 +131,7 @@ function teleportation.requestTeleportation(transposer, teleporter_index, redsto
             ---@diagnostic disable-next-line: undefined-field
             os.sleep(3)
 
-            teleportation.initiateTeleportation(transposer, redstone) -- always returns true
+            teleportation.initiate(transposer, redstone) -- always returns true
 
             return true
         end
@@ -141,7 +141,7 @@ function teleportation.requestTeleportation(transposer, teleporter_index, redsto
     end
 end
 
-function teleportation.checkTeleportationRequests(transposer, teleporters, redstone)
+function teleportation.checkForRequests(transposer, teleporters, redstone)
     local request_item = transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.TP_REQUEST)
 
     if request_item == nil then
@@ -157,7 +157,7 @@ function teleportation.checkTeleportationRequests(transposer, teleporters, redst
             cfg.endchest_slots.TP_ACCEPT
         )
 
-        teleportation.acceptTeleportation(transposer, redstone)
+        teleportation.accept(transposer, redstone)
 
         return true
     end

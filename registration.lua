@@ -3,7 +3,7 @@ local cfg = require("config")
 
 local registration = {}
 
-function registration.requestRegistration(transposer, states)
+function registration.request(transposer, states)
     states.registering_mode = true
 
     if transposer.getStackInSlot(cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER) == nil then
@@ -81,7 +81,7 @@ function registration.requestRegistration(transposer, states)
     end
 end
 
-function registration.checkRegistrationRequests(transposer)
+function registration.checkForRequests(transposer)
     if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST) == nil then
         return false
     end

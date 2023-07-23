@@ -17,20 +17,19 @@ local redstone = component.proxy(component.list("redstone")())
 
 -- Variables
 
-local teleporters = {}
 local states = {
     registering_mode = false
 }
 
 local main_thread = threading.create(function()
-    teleporters = utils.getDestinationTeleporters(transposer)
+    local teleporters = utils.getDestinationTeleporters(transposer)
 
     while true do
         local state, traceback = pcall(function()
-            teleportation.checkTeleportationRequests(transposer, teleporters, redstone)
+            teleportation.checkForRequests(transposer, teleporters, redstone)
 
             if not states.registering_mode then
-                registration.checkRegistrationRequests(transposer)
+                registration.checkForRequests(transposer)
             end
         end)
 
@@ -78,7 +77,7 @@ local control_thread = threading.create(function()
 
         utils.onKeyDown(keyboard, code, "l", function()
             shell.execute("clear")
-            teleporters = utils.getDestinationTeleporters(transposer)
+            local teleporters = utils.getDestinationTeleporters(transposer)
 
             print("Available destinations:\n")
 
@@ -98,7 +97,7 @@ local control_thread = threading.create(function()
 
                     utils.onKeyDown(keyboard, code_confirmation, "y", function()
                         print("")
-                        teleportation.requestTeleportation(transposer, teleporter_slot, redstone)
+                        teleportation.request(transposer, teleporter_slot, redstone)
                         print("Teleported successfully!")
 
                         ---@diagnostic disable-next-line: undefined-field
@@ -122,7 +121,7 @@ local control_thread = threading.create(function()
         utils.onKeyDown(keyboard, code, "r", function()
             print("Endpoint registration sequence started (timeout: 5s.)...\n")
 
-            local status = registration.requestRegistration(transposer, states)
+            local status = registration.request(transposer, states)
 
             print("\nAdded " .. status .. " new endpoints.")
             print("Press [H] to return to the menu.")
