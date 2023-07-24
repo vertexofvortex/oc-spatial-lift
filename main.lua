@@ -10,6 +10,7 @@ local event = require("event")
 local utils = require("utils")
 local teleportation = require("teleportation")
 local registration = require("registration")
+local updates = require("updates")
 
 -- Components
 local transposer = component.proxy(component.list("transposer")())
@@ -18,7 +19,8 @@ local redstone = component.proxy(component.list("redstone")())
 -- Variables
 
 local states = {
-    registering_mode = false
+    registering_mode = false,
+    update_mode = false,
 }
 
 local main_thread = threading.create(function()
@@ -30,6 +32,11 @@ local main_thread = threading.create(function()
 
             if not states.registering_mode then
                 registration.checkForRequests(transposer)
+            end
+
+            -- TODO: check if in tp. or reg. process
+            if not states.update_mode then
+                updates.checkForRequests(transposer, states)
             end
         end)
 
@@ -48,6 +55,7 @@ local control_thread = threading.create(function()
         "+--------------------------------------+\n" ..
         "| Welcome to The Spatial Lift program! |\n" ..
         "+--------------------------------------+\n\n" ..
+        "Version " .. updates.getCurrentVersion() .. "\n\n" ..
         "Controls:\n\n" ..
         "[L]\t\tShow teleporters list\n" ..
         "[R]\t\tRegister current teleporter and sync with others\n" ..
@@ -125,6 +133,10 @@ local control_thread = threading.create(function()
 
             print("\nAdded " .. status .. " new endpoints.")
             print("Press [H] to return to the menu.")
+        end)
+
+        utils.onKeyDown(keyboard, code, "u", function()
+            updates.broadcastUpdate(transposer, states)
         end)
     end
 end)

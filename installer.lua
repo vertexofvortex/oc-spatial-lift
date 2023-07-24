@@ -6,6 +6,7 @@ local scripts = {
     "main.lua",
     "teleportation.lua",
     "registration.lua",
+    "updates.lua",
     "utils.lua",
     "push.lua",
     "pull.lua",

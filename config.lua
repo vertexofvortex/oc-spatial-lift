@@ -5,6 +5,7 @@ local config = {
         ENDCHEST = sides.top,
         STORAGE = sides.north,
         PORT = sides.south,
+        DRIVE = sides.west,
     },
 
     redstone_sides = {
@@ -15,10 +16,16 @@ local config = {
         CELL_STORE = 27,
         CELL_TEMPSTORE = 26,
         CELL_SEND = 25,
+
         TP_REQUEST = 24,
         TP_ACCEPT = 23,
+
         REG_REQUEST = 18,
         REG_ACCEPT = 17,
+
+        UPD_BROADCAST = 10,
+        UPD_RESPONSE = 11,
+        UPD_RESPONSE_ACCEPT = 12,
     },
 
     storage_slots = {
@@ -31,7 +38,8 @@ local config = {
     },
 
     updates = {
-        disable_updates = false
+        disable_updates = false,
+        update_floppy_address = "8a6",
     },
 }
 
