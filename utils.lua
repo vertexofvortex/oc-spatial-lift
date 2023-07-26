@@ -1,4 +1,5 @@
 local sides = require("sides")
+local cfg = require("config")
 
 local utils = {}
 
@@ -23,8 +24,8 @@ function utils.findItemByLabel(inventory, item_label)
     return nil
 end
 
-function utils.getDestinationTeleporters(transposer, inv)
-    local marker_items = transposer.getAllStacks(inv.STORAGE).getAll()
+function utils.getDestinationTeleporters(transposer)
+    local marker_items = transposer.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
     local teleporters_list = {}
 
     for slot, marker_item in pairs(marker_items) do

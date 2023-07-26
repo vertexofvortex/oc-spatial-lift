@@ -1,3 +1,4 @@
 local sh = require("shell")
+local cfg = require("config")
 
-sh.execute("cp -r /home/spatial-lift /mnt/a46/")
+sh.execute(string.format("cp -r /home/spatial-lift/* /mnt/%s/", cfg.updates.update_floppy_address))
