@@ -10,6 +10,8 @@ local scripts = {
     "utils.lua",
     "push.lua",
     "pull.lua",
+    "config.lua",
+    "version",
 }
 for i = 1, #scripts do
     shell.execute("wget -f " .. repo .. "/" .. scripts[i])
