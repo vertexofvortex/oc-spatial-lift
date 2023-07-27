@@ -37,11 +37,11 @@ end
 
 -- TODO: sides enum
 function utils.toggleSpatialIO(redstone)
-    redstone.setOutput(cfg.redstone_sies.PORT, 15)
+    redstone.setOutput(cfg.redstone_sides.PORT, 15)
 
     ---@diagnostic disable-next-line: undefined-field
     os.sleep(0.2)
-    redstone.setOutput(cfg.redstone_sies.PORT, 0)
+    redstone.setOutput(cfg.redstone_sides.PORT, 0)
 
     return true
 end
