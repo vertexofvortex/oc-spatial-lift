@@ -13,7 +13,7 @@ local scripts = {
         "installer.lua",
         "config.lua",
         "version",
-        "spatial-lift.lua",
+        "main.lua",
     },
 }
 
