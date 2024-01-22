@@ -1,56 +1,15 @@
--- Libraries
 local threading = require("thread")
-local component = require("component")
-local sides = require("sides")
-local shell = require("shell")
 local keyboard = require("keyboard")
 local event = require("event")
+local shell = require("shell")
 
--- Modules
-local utils = require("utils")
-local teleportation = require("teleportation")
-local registration = require("registration")
-local updates = require("updates")
-
--- Components
-local transposer = component.proxy(component.list("transposer")())
-local redstone = component.proxy(component.list("redstone")())
-
--- Variables
-
-local states = {
-    registering_mode = false,
-    update_mode = false,
-}
-
-local main_thread = threading.create(function()
-    local teleporters = utils.getDestinationTeleporters(transposer)
-
-    while true do
-        local state, traceback = pcall(function()
-            teleportation.checkForRequests(transposer, teleporters, redstone)
-
-            if not states.registering_mode then
-                registration.checkForRequests(transposer)
-            end
-
-            -- TODO: check if in tp. or reg. process
-            if not states.update_mode then
-                updates.checkForRequests(transposer, states)
-            end
-        end)
-
-        if not state then
-            print(traceback)
-        end
-
-        ---@diagnostic disable-next-line: undefined-field
-        os.sleep(1)
+function onKeyDown(keyboard, key_code, key_char, callback)
+    if keyboard.keys[key_code] == key_char then
+        callback()
     end
-end)
+end
 
--- A thread for the program control
-local control_thread = threading.create(function()
+return function(utils, updates, registration, teleportation, transposer, redstone, cfg, states)
     local help_prompt =
         "+--------------------------------------+\n" ..
         "| Welcome to The Spatial Lift program! |\n" ..
@@ -68,24 +27,21 @@ local control_thread = threading.create(function()
     while true do
         local _, _, _, code, _ = event.pull("key_down")
 
-        utils.onKeyDown(keyboard, code, "c", function()
+        onKeyDown(keyboard, code, "c", function()
             if keyboard.isControlDown() then
                 print("Terminating...")
-
-                main_thread:kill()
-                ---@diagnostic disable-next-line: undefined-global
-                control_thread:kill()
+                threading.current():kill()
             end
         end)
 
-        utils.onKeyDown(keyboard, code, "h", function()
+        onKeyDown(keyboard, code, "h", function()
             shell.execute("clear")
             print(help_prompt)
         end)
 
-        utils.onKeyDown(keyboard, code, "l", function()
+        onKeyDown(keyboard, code, "l", function()
             shell.execute("clear")
-            local teleporters = utils.getDestinationTeleporters(transposer)
+            local teleporters = utils.getDestinationTeleporters(transposer, cfg)
 
             print("Available destinations:\n")
 
@@ -98,14 +54,14 @@ local control_thread = threading.create(function()
             local _, _, _, code_teleport, _ = event.pull("key_down")
 
             for teleporter_slot, teleporter_name in pairs(teleporters) do
-                utils.onKeyDown(keyboard, code_teleport, tostring(teleporter_slot), function()
+                onKeyDown(keyboard, code_teleport, tostring(teleporter_slot), function()
                     print("Are you sure you want to teleport to " .. teleporter_name .. " destination? Y/n")
 
                     local _, _, _, code_confirmation, _ = event.pull("key_down")
 
-                    utils.onKeyDown(keyboard, code_confirmation, "y", function()
+                    onKeyDown(keyboard, code_confirmation, "y", function()
                         print("")
-                        teleportation.request(transposer, teleporter_slot, redstone)
+                        teleportation.request(teleporter_slot, transposer, redstone, utils)
                         print("Teleported successfully!")
 
                         ---@diagnostic disable-next-line: undefined-field
@@ -114,7 +70,7 @@ local control_thread = threading.create(function()
                         print(help_prompt)
                     end)
 
-                    utils.onKeyDown(keyboard, code_confirmation, "n", function()
+                    onKeyDown(keyboard, code_confirmation, "n", function()
                         print("Cancelling...")
 
                         ---@diagnostic disable-next-line: undefined-field
@@ -126,17 +82,17 @@ local control_thread = threading.create(function()
             end
         end)
 
-        utils.onKeyDown(keyboard, code, "r", function()
+        onKeyDown(keyboard, code, "r", function()
             print("Endpoint registration sequence started (timeout: 5s.)...\n")
 
-            local status = registration.request(transposer, states)
+            local status = registration.request(utils, transposer, cfg, states)
 
             print("\nAdded " .. status .. " new endpoints.")
             print("Press [H] to return to the menu.")
         end)
 
-        utils.onKeyDown(keyboard, code, "u", function()
-            updates.broadcastUpdate(transposer, states)
+        onKeyDown(keyboard, code, "u", function()
+            updates.broadcastUpdate(transposer, cfg, states)
         end)
     end
-end)
+end

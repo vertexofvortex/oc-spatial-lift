@@ -1,5 +1,4 @@
 local sides = require("sides")
-local cfg = require("config")
 
 local utils = {}
 
@@ -13,7 +12,7 @@ function utils.getFirstAvailableSlot(inventory)
 end
 
 -- Returns the first slot index (starting with zero) which contains an item with provided label
---  and returns nil if item not found
+-- and returns nil if item not found
 function utils.findItemByLabel(inventory, item_label)
     for slot_index, item_stack in pairs(inventory) do
         if item_stack ~= nil and item_stack.label == item_label then
@@ -24,7 +23,7 @@ function utils.findItemByLabel(inventory, item_label)
     return nil
 end
 
-function utils.getDestinationTeleporters(transposer)
+function utils.getDestinationTeleporters(transposer, cfg)
     local marker_items = transposer.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
     local teleporters_list = {}
 
@@ -35,8 +34,7 @@ function utils.getDestinationTeleporters(transposer)
     return teleporters_list
 end
 
--- TODO: sides enum
-function utils.toggleSpatialIO(redstone)
+function utils.toggleSpatialIO(redstone, cfg)
     redstone.setOutput(cfg.redstone_sides.PORT, 15)
 
     ---@diagnostic disable-next-line: undefined-field
@@ -44,12 +42,6 @@ function utils.toggleSpatialIO(redstone)
     redstone.setOutput(cfg.redstone_sides.PORT, 0)
 
     return true
-end
-
-function utils.onKeyDown(keyboard, key_code, key_char, callback)
-    if keyboard.keys[key_code] == key_char then
-        callback()
-    end
 end
 
 return utils

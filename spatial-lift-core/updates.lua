@@ -1,5 +1,4 @@
 local io = require("io")
-local cfg = require("config")
 local shell = require("shell")
 local fs = require("filesystem")
 
@@ -15,7 +14,7 @@ function updates.getCurrentVersion()
 end
 
 -- Checks for an update requests in a background
-function updates.checkForRequests(transposer, states)
+function updates.checkForRequests(transposer, cfg, states)
     if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST) == nil then
         return false
     end
@@ -40,8 +39,8 @@ function updates.checkForRequests(transposer, states)
         end
     end
 
-    -- ...and than makes install
-    updates.install()
+    -- ...and then makes install
+    updates.install(cfg)
 
     -- When installation completed/failed (doesn't matter), places it's marker item
     -- to the update response slot
@@ -81,7 +80,7 @@ function updates.checkShouldUpdate(update_version)
     end
 end
 
-function updates.broadcastUpdate(transposer, states)
+function updates.broadcastUpdate(transposer, cfg, states)
     if transposer.getStackInSlot(cfg.transposer_sides.DRIVE, 1) == nil then
         print("No floppy detected in the drive.")
 
@@ -146,7 +145,7 @@ function updates.broadcastUpdate(transposer, states)
 end
 
 -- Installs an update
-function updates.install()
+function updates.install(cfg)
     local files = {
         "installer.lua",
         "main.lua",
