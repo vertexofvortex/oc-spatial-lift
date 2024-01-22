@@ -9,7 +9,7 @@ local config = {
     },
 
     redstone_sides = {
-        PORT = sides.north,
+        PORT = sides.bottom,
     },
 
     endchest_slots = {
