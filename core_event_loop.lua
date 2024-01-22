@@ -1,6 +1,6 @@
 local os = require("os")
 
-local cfg = require("../config")
+local cfg = require("config")
 local registration = require("registration")
 local teleportation = require("teleportation")
 local updates = require("updates")

@@ -4,7 +4,7 @@ local component = require("component")
 local transposer = component.proxy(component.list("transposer")())
 local redstone = component.proxy(component.list("redstone")())
 
-local cfg = require("../config")
+local cfg = require("config")
 
 local utils = {}
 

@@ -3,7 +3,7 @@ local shell = require("shell")
 local fs = require("filesystem")
 
 local utils = require("utils")
-local cfg = require("../config")
+local cfg = require("config")
 
 local updates = {}
 
