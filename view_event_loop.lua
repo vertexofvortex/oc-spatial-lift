@@ -37,6 +37,7 @@ return function(states)
         onKeyDown(keyboard, code, "c", function()
             if keyboard.isControlDown() then
                 print("Terminating...")
+                states.stop_execution = true
                 threading.current():kill()
             end
         end)
@@ -68,8 +69,9 @@ return function(states)
 
                     onKeyDown(keyboard, code_confirmation, "y", function()
                         print("")
-                        teleportation.request(teleporter_slot)
-                        print("Teleported successfully!")
+                        if teleportation.request(teleporter_slot) then
+                            print("Teleported successfully!")
+                        end
 
                         ---@diagnostic disable-next-line: undefined-field
                         os.sleep(5)
