@@ -1,6 +1,6 @@
 local teleportation = {}
 
-function teleportation.request(teleporter_index, transposer, redstone, utils)
+function teleportation.request(teleporter_index, utils, transposer, redstone, cfg)
     if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.CELL_STORE) == nil then
         print("The spatial cell is missing. Perhaps someone else is using the teleporter right now?")
         return false
@@ -79,7 +79,7 @@ function teleportation.request(teleporter_index, transposer, redstone, utils)
             ---@diagnostic disable-next-line: undefined-field
             os.sleep(3)
 
-            teleportation.initiate(transposer, redstone) -- always returns true
+            teleportation.initiate(utils, transposer, redstone, cfg) -- always returns true
 
             return true
         end
@@ -89,7 +89,7 @@ function teleportation.request(teleporter_index, transposer, redstone, utils)
     end
 end
 
-function teleportation.initiate(transposer, redstone, utils)
+function teleportation.initiate(utils, transposer, redstone, cfg)
     utils.toggleSpatialIO(redstone)
 
     transposer.transferItem(
@@ -104,7 +104,7 @@ function teleportation.initiate(transposer, redstone, utils)
     return true
 end
 
-function teleportation.checkForRequests(utils, transposer, redstone, teleporters)
+function teleportation.checkForRequests(teleporters, utils, transposer, redstone, cfg)
     local request_item = transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.TP_REQUEST)
 
     if request_item == nil then
@@ -120,13 +120,13 @@ function teleportation.checkForRequests(utils, transposer, redstone, teleporters
             cfg.endchest_slots.TP_ACCEPT
         )
 
-        teleportation.accept(transposer, redstone)
+        teleportation.accept(utils, transposer, redstone, cfg)
 
         return true
     end
 end
 
-function teleportation.accept(utils, transposer, redstone)
+function teleportation.accept(utils, transposer, redstone, cfg)
     while true do
         if
             transposer.getStackInSlot(

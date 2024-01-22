@@ -4,12 +4,14 @@ local repo = "https://raw.githubusercontent.com/vertexofvortex/oc-spatial-lift/m
 local scripts = {
     ["gui-lib"] = {},
     ["spatial-lift-core"] = {
-        "teleportation.lua",
+        "core_event_loop.lua",
         "registration.lua",
-        "utils.lua",
+        "teleportation.lua",
         "updates.lua",
+        "utils.lua",
     },
     ["spatial-lift-view"] = {
+        "view_event_loop.lua"
     },
     [""] = {
         "installer.lua",
@@ -19,11 +21,10 @@ local scripts = {
     },
 }
 for dir, files in pairs(scripts) do
+    local path = ""
     if dir ~= "" then
-        path = dir .. "/"
+        local path = dir .. "/"
         shell.execute("mkdir " .. dir)
-    else
-        path = ""
     end
 
     for i = 1, #files do

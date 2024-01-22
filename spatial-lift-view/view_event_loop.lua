@@ -61,7 +61,7 @@ return function(utils, updates, registration, teleportation, transposer, redston
 
                     onKeyDown(keyboard, code_confirmation, "y", function()
                         print("")
-                        teleportation.request(teleporter_slot, transposer, redstone, utils)
+                        teleportation.request(teleporter_slot, utils, transposer, redstone, cfg)
                         print("Teleported successfully!")
 
                         ---@diagnostic disable-next-line: undefined-field

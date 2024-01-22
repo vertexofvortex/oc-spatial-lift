@@ -3,7 +3,7 @@ return function(utils, updates, registration, teleportation, transposer, redston
 
     while true do
         local state, traceback = pcall(function()
-            teleportation.checkForRequests(utils, transposer, redstone, teleporters)
+            teleportation.checkForRequests(teleporters, utils, transposer, redstone, cfg)
 
             if not states.registering_mode then
                 registration.checkForRequests(utils, transposer, cfg)
