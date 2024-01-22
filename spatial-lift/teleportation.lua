@@ -82,7 +82,7 @@ function teleportation.request(teleporter_index)
             ---@diagnostic disable-next-line: undefined-field
             os.sleep(3)
 
-            teleportation.initiate(utils) -- always returns true
+            teleportation.initiate() -- always returns true
 
             return true
         end
@@ -123,7 +123,7 @@ function teleportation.checkForRequests(teleporters)
             cfg.endchest_slots.TP_ACCEPT
         )
 
-        teleportation.accept(utils)
+        teleportation.accept()
 
         return true
     end

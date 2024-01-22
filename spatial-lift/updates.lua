@@ -178,6 +178,7 @@ function updates.install()
 
         mount_timeout_timer = mount_timeout_timer + 1
 
+        ---@diagnostic disable-next-line: undefined-field
         os.sleep(1)
     end
 
