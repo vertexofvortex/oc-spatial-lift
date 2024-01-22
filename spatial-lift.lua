@@ -10,7 +10,7 @@ while true do
     local registration = require("spatial-lift-core/registration")
     local teleportation = require("spatial-lift-core/teleportation")
     local core_event_loop = require("spatial-lift-core/core_event_loop")
-    local view_event_loop = require("spatial-lift-view/viewevent_loop")
+    local view_event_loop = require("spatial-lift-view/view_event_loop")
 
     -- Components
     local transposer = component.proxy(component.list("transposer")())
@@ -25,15 +25,13 @@ while true do
 
     -- Threads
     local core_thread = threading.create(core_event_loop, utils, updates, registration, teleportation, transposer, redstone, cfg, states)
-    local view_thread = threading.create(view_event_loop, updates, utils, registration, teleportation, transposer, redstone, cfg, states)
+    local view_thread = threading.create(view_event_loop, utils, updates, registration, teleportation, transposer, redstone, cfg, states)
 
     threading.waitForAny({core_thread, view_thread})
 
-    if core_thread == "running" then
----@diagnostic disable-next-line: undefined-field
+    if core_thread:status() == "running" then
         core_thread:kill()
-    elseif view_thread == "running" then
----@diagnostic disable-next-line: undefined-field
+    elseif view_thread:status() == "running" then
         view_thread:kill()
     end
 

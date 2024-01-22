@@ -14,12 +14,13 @@ local scripts = {
         "view_event_loop.lua"
     },
     [""] = {
-        -- "installer.lua",
+        "installer.lua",
         "config.lua",
         "version",
         "spatial-lift.lua",
     },
 }
+
 for dir, files in pairs(scripts) do
     local path = ""
     if dir ~= "" then

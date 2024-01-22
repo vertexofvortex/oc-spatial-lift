@@ -1,3 +1,5 @@
+local os = require("os")
+
 return function(utils, updates, registration, teleportation, transposer, redstone, cfg, states)
     local teleporters = utils.getDestinationTeleporters(transposer)
 

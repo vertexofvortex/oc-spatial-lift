@@ -2,6 +2,7 @@ local threading = require("thread")
 local keyboard = require("keyboard")
 local event = require("event")
 local shell = require("shell")
+local os = require("os")
 
 function onKeyDown(keyboard, key_code, key_char, callback)
     if keyboard.keys[key_code] == key_char then
