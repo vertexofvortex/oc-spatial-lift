@@ -1,19 +1,22 @@
+local utils = require("utils")
+local cfg = require("../config")
+
 local registration = {}
 
-function registration.request(utils, transposer, cfg, states)
+function registration.request(states)
     states.registering_mode = true
 
-    if transposer.getStackInSlot(cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER) == nil then
+    if utils.getStackInSlot(cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER) == nil then
         print("Put 64 named markers in the first slot of internal buffer before initiating registration sequence.")
 
         return false
     end
 
-    local markers_count = transposer.getStackInSlot(
+    local markers_count = utils.getStackInSlot(
         cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER
     ).size
 
-    transposer.transferItem(
+    utils.transferItem(
         cfg.transposer_sides.STORAGE,
         cfg.transposer_sides.ENDCHEST,
         markers_count - 1,
@@ -27,19 +30,19 @@ function registration.request(utils, transposer, cfg, states)
     print("#", "Status  ", "Name\n")
 
     while true do
-        if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT) ~= nil then
+        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT) ~= nil then
             request_timeout_timer = 0
 
             print(response_counter, "ACCEPTED",
-                transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT).label)
+                utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT).label)
 
             local new_marker_slot = utils.getFirstAvailableSlot(
-                transposer.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
+                utils.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
             ) + 1
 
             -- TODO: отлов ошибки, если все слоты заполнены
 
-            transposer.transferItem(
+            utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.STORAGE,
                 1,
@@ -54,11 +57,11 @@ function registration.request(utils, transposer, cfg, states)
             print("\nNo registration response has been detected in the last 5 seconds.")
             print("Consider the registration completed.")
 
-            local remaining_self_markers = transposer.getStackInSlot(
+            local remaining_self_markers = utils.getStackInSlot(
                 cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST
             )
 
-            transposer.transferItem(
+            utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.STORAGE,
                 remaining_self_markers.size,
@@ -78,40 +81,40 @@ function registration.request(utils, transposer, cfg, states)
     end
 end
 
-function registration.checkForRequests(utils, transposer, cfg)
-    if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST) == nil then
+function registration.checkForRequests()
+    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST) == nil then
         return false
     end
 
-    if transposer.getStackInSlot(
+    if utils.getStackInSlot(
             cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST
-        ).label == transposer.getStackInSlot(
+        ).label == utils.getStackInSlot(
             cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER
         ).label then
         return false
     end
 
     while true do
-        local request_item_stack = transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST,
+        local request_item_stack = utils.getStackInSlot(cfg.transposer_sides.ENDCHEST,
             cfg.endchest_slots.REG_REQUEST)
-        local storage_inventory = transposer.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
+        local storage_inventory = utils.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
 
         if utils.findItemByLabel(storage_inventory, request_item_stack.label) ~= nil then
             return false
         end
 
-        if transposer.transferItem(
+        if utils.transferItem(
                 cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1, cfg.storage_slots.CURRENT_MARKER, cfg.endchest_slots.REG_ACCEPT
             ) == 1 then
             print("Got a registration request from " .. request_item_stack.label .. ".")
             print("Exchanging markers...")
 
             local new_marker_slot = utils.getFirstAvailableSlot(
-                transposer.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
+                utils.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
             ) + 1
 
             -- transposer.transferItem(inv.STORAGE, inv.ENDCHEST, 1, 1, slot.REG_ACCEPT)
-            transposer.transferItem(
+            utils.transferItem(
                 cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.STORAGE, 1, cfg.endchest_slots.REG_REQUEST,
                 new_marker_slot
             )

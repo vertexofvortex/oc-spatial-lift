@@ -3,15 +3,13 @@ local args = { ... }
 local repo = "https://raw.githubusercontent.com/vertexofvortex/oc-spatial-lift/master/"
 local scripts = {
     ["gui-lib"] = {},
-    ["spatial-lift-core"] = {
+    ["spatial-lift"] = {
+        "view_event_loop.lua",
         "core_event_loop.lua",
         "registration.lua",
         "teleportation.lua",
         "updates.lua",
         "utils.lua",
-    },
-    ["spatial-lift-view"] = {
-        "view_event_loop.lua"
     },
     [""] = {
         "installer.lua",

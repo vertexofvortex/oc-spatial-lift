@@ -1,19 +1,25 @@
 local os = require("os")
 
-return function(utils, updates, registration, teleportation, transposer, redstone, cfg, states)
-    local teleporters = utils.getDestinationTeleporters(transposer)
+local cfg = require("../config")
+local registration = require("registration")
+local teleportation = require("teleportation")
+local updates = require("updates")
+local utils = require("utils")
+
+return function(states)
+    local teleporters = utils.getDestinationTeleporters()
 
     while true do
         local state, traceback = pcall(function()
-            teleportation.checkForRequests(teleporters, utils, transposer, redstone, cfg)
+            teleportation.checkForRequests(teleporters)
 
             if not states.registering_mode then
-                registration.checkForRequests(utils, transposer, cfg)
+                registration.checkForRequests()
             end
 
             -- TODO: check if in tp. or reg. process
             if not states.update_mode then
-                updates.checkForRequests(transposer, states)
+                updates.checkForRequests(states)
             end
         end)
 

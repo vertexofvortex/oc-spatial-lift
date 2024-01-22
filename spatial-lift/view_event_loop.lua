@@ -4,13 +4,19 @@ local event = require("event")
 local shell = require("shell")
 local os = require("os")
 
+local cfg = require("../config")
+local registration = require("registration")
+local teleportation = require("teleportation")
+local updates = require("updates")
+local utils = require("utils")
+
 function onKeyDown(keyboard, key_code, key_char, callback)
     if keyboard.keys[key_code] == key_char then
         callback()
     end
 end
 
-return function(utils, updates, registration, teleportation, transposer, redstone, cfg, states)
+return function(states)
     local help_prompt =
         "+--------------------------------------+\n" ..
         "| Welcome to The Spatial Lift program! |\n" ..
@@ -42,7 +48,7 @@ return function(utils, updates, registration, teleportation, transposer, redston
 
         onKeyDown(keyboard, code, "l", function()
             shell.execute("clear")
-            local teleporters = utils.getDestinationTeleporters(transposer, cfg)
+            local teleporters = utils.getDestinationTeleporters()
 
             print("Available destinations:\n")
 
@@ -62,7 +68,7 @@ return function(utils, updates, registration, teleportation, transposer, redston
 
                     onKeyDown(keyboard, code_confirmation, "y", function()
                         print("")
-                        teleportation.request(teleporter_slot, utils, transposer, redstone, cfg)
+                        teleportation.request(teleporter_slot)
                         print("Teleported successfully!")
 
                         ---@diagnostic disable-next-line: undefined-field
@@ -86,14 +92,14 @@ return function(utils, updates, registration, teleportation, transposer, redston
         onKeyDown(keyboard, code, "r", function()
             print("Endpoint registration sequence started (timeout: 5s.)...\n")
 
-            local status = registration.request(utils, transposer, cfg, states)
+            local status = registration.request(states)
 
             print("\nAdded " .. status .. " new endpoints.")
             print("Press [H] to return to the menu.")
         end)
 
         onKeyDown(keyboard, code, "u", function()
-            updates.broadcastUpdate(transposer, cfg, states)
+            updates.broadcastUpdate(states)
         end)
     end
 end

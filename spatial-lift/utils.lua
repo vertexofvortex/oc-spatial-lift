@@ -1,4 +1,10 @@
 local sides = require("sides")
+local component = require("component")
+
+local transposer = component.proxy(component.list("transposer")())
+local redstone = component.proxy(component.list("redstone")())
+
+local cfg = require("../config")
 
 local utils = {}
 
@@ -23,7 +29,7 @@ function utils.findItemByLabel(inventory, item_label)
     return nil
 end
 
-function utils.getDestinationTeleporters(transposer, cfg)
+function utils.getDestinationTeleporters()
     local marker_items = transposer.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
     local teleporters_list = {}
 
@@ -34,7 +40,7 @@ function utils.getDestinationTeleporters(transposer, cfg)
     return teleporters_list
 end
 
-function utils.toggleSpatialIO(redstone, cfg)
+function utils.toggleSpatialIO()
     redstone.setOutput(cfg.redstone_sides.PORT, 15)
 
     ---@diagnostic disable-next-line: undefined-field
@@ -42,6 +48,18 @@ function utils.toggleSpatialIO(redstone, cfg)
     redstone.setOutput(cfg.redstone_sides.PORT, 0)
 
     return true
+end
+
+function utils.getStackInSlot(side, slot)
+    return transposer.getStackInSlot(side, slot)
+end
+
+function utils.transferItem(from_side, to_side, amount, from_slot, to_slot)
+    return transposer.transferItem(from_side, to_side, amount, from_slot, to_slot)
+end
+
+function utils.getAllStacks(side)
+    return transposer.getAllStacks(side)
 end
 
 return utils

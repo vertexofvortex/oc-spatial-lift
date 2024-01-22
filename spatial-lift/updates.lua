@@ -2,6 +2,9 @@ local io = require("io")
 local shell = require("shell")
 local fs = require("filesystem")
 
+local utils = require("utils")
+local cfg = require("../config")
+
 local updates = {}
 
 -- Get current program version from file
@@ -14,13 +17,13 @@ function updates.getCurrentVersion()
 end
 
 -- Checks for an update requests in a background
-function updates.checkForRequests(transposer, cfg, states)
-    if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST) == nil then
+function updates.checkForRequests(states)
+    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST) == nil then
         return false
     end
 
     if not updates.checkShouldUpdate(
-            tonumber(transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST).label)
+            tonumber(utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST).label)
         ) then
         print("Current version is newer or at least the same as available update. Skipping.")
 
@@ -33,23 +36,23 @@ function updates.checkForRequests(transposer, cfg, states)
 
     -- Waits until it can grab floppy disk from the update broadcast slot...
     while true do
-        if transposer.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.DRIVE, 1,
+        if utils.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.DRIVE, 1,
                 cfg.endchest_slots.UPD_BROADCAST, 1) == 1 then
             break
         end
     end
 
     -- ...and then makes install
-    updates.install(cfg)
+    updates.install()
 
     -- When installation completed/failed (doesn't matter), places it's marker item
     -- to the update response slot
-    transposer.transferItem(cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1,
+    utils.transferItem(cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1,
         cfg.storage_slots.CURRENT_MARKER, cfg.endchest_slots.UPD_RESPONSE)
 
     -- Waits update response accept from the first endpoint
     while true do
-        if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE_ACCEPT) ~= nil then
+        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE_ACCEPT) ~= nil then
             print("Update response accepted by a requesting endpoint.")
 
             break
@@ -57,11 +60,11 @@ function updates.checkForRequests(transposer, cfg, states)
     end
 
     -- Grabs it's own marker back to the storage
-    transposer.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.STORAGE, 1,
+    utils.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.STORAGE, 1,
         cfg.endchest_slots.UPD_RESPONSE_ACCEPT, cfg.storage_slots.CURRENT_MARKER)
 
     -- Returns back a floppy disk
-    transposer.transferItem(cfg.transposer_sides.DRIVE, cfg.transposer_sides.ENDCHEST, 1, 1,
+    utils.transferItem(cfg.transposer_sides.DRIVE, cfg.transposer_sides.ENDCHEST, 1, 1,
         cfg.endchest_slots.UPD_BROADCAST)
 
     states.update_mode = false
@@ -80,8 +83,8 @@ function updates.checkShouldUpdate(update_version)
     end
 end
 
-function updates.broadcastUpdate(transposer, cfg, states)
-    if transposer.getStackInSlot(cfg.transposer_sides.DRIVE, 1) == nil then
+function updates.broadcastUpdate(states)
+    if utils.getStackInSlot(cfg.transposer_sides.DRIVE, 1) == nil then
         print("No floppy detected in the drive.")
 
         return false
@@ -94,7 +97,7 @@ function updates.broadcastUpdate(transposer, cfg, states)
     local update_responses = {}
     local request_timeout_timer = 0
 
-    transposer.transferItem(
+    utils.transferItem(
         cfg.transposer_sides.DRIVE,
         cfg.transposer_sides.ENDCHEST,
         1,
@@ -103,16 +106,16 @@ function updates.broadcastUpdate(transposer, cfg, states)
     )
 
     while true do
-        if transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE) ~= nil then
+        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE) ~= nil then
             request_timeout_timer = 0
 
             print("Detected response from " ..
-                transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label ..
+            utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label ..
                 ", consider this endpoint has installed an update.")
 
-            update_responses[transposer.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label] = true
+            update_responses[utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label] = true
 
-            transposer.transferItem(
+            utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.ENDCHEST,
                 1,
@@ -122,7 +125,7 @@ function updates.broadcastUpdate(transposer, cfg, states)
         end
 
         if request_timeout_timer >= 5 then
-            transposer.transferItem(
+            utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.DRIVE,
                 1,
@@ -145,7 +148,7 @@ function updates.broadcastUpdate(transposer, cfg, states)
 end
 
 -- Installs an update
-function updates.install(cfg)
+function updates.install()
     local files = {
         "installer.lua",
         "main.lua",
