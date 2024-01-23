@@ -4,13 +4,13 @@ local repo = "https://raw.githubusercontent.com/vertexofvortex/oc-spatial-lift/m
 local scripts = {
     ["gui_lib"] = {},
     ["spatial_lift_core"] = {
-        "core_event_loop.lua",
         "registration.lua",
         "teleportation.lua",
         "updates.lua",
         "utils.lua",
     },
     ["spatial_lift_view"] = {
+        "core_event_loop.lua",
         "view_event_loop.lua",
     },
     [""] = {

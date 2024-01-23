@@ -3,7 +3,7 @@ local threading = require("thread")
 
 while true do
     -- Modules
-    local core_event_loop = require("spatial_lift_core.core_event_loop")
+    local core_event_loop = require("spatial_lift_view.core_event_loop")
     local view_event_loop = require("spatial_lift_view.view_event_loop")
 
     -- Variables

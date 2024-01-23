@@ -69,9 +69,30 @@ return function(states)
 
                     onKeyDown(keyboard, code_confirmation, "y", function()
                         print("")
-                        if teleportation.request(teleporter_slot) then
-                            print("Teleported successfully!")
-                        end
+                        local e = teleportation.request_progress
+                        teleportation.request(teleporter_slot, function(progress)
+                            if progress == e.CELL_MISSING then
+                                print("The spatial cell is missing. Perhaps someone else is using the teleporter right now?")
+
+                            elseif progress == e.SELF_TELEPORT then
+                                print("Cannot teleport to self.")
+                            
+                            elseif progress == e.START_PINGING then
+                                print("Pinging destination endpoint...")
+                            
+                            elseif progress == e.NO_RESPONSE then
+                                print("Connection refused. Destination endpoint is unavailable.")
+                                print("Check if teleporter is properly working and chunkloaded.")
+
+                            elseif progress == e.ACCEPTED then
+                                print("Teleportation request accepted by destination endpoint!")
+                                print("Teleporting in 3 seconds...")
+
+                            elseif progress == e.SUCCESS then
+                                print("Teleportation...")
+                                print("Teleported successfully!")
+                            end
+                        end)
 
                         ---@diagnostic disable-next-line: undefined-field
                         os.sleep(5)
@@ -92,12 +113,27 @@ return function(states)
         end)
 
         onKeyDown(keyboard, code, "r", function()
-            print("Endpoint registration sequence started (timeout: 5s.)...\n")
+            local response_counter = 0
+            local e = registration.request_progress
+            registration.request(states, function(progress, data)
+                if progress == e.NO_MARKERS then
+                    print("Put 64 named markers in the first slot of internal buffer before initiating registration sequence.")  
 
-            local status = registration.request(states)
+                elseif progress == e.INITIATE then
+                    print("Endpoint registration sequence started (timeout: 5s.)...\n")
+                    print("#", "Status  ", "Name\n")
 
-            print("\nAdded " .. status .. " new endpoints.")
-            print("Press [H] to return to the menu.")
+                elseif progress == e.REGISTRATED then
+                    response_counter = response_counter + 1
+                    print(response_counter, "ACCEPTED", data)
+
+                elseif progress == e.FINISH then
+                    print("\nNo registration response has been detected in the last 5 seconds.")
+                    print("Consider the registration completed.")
+                    print("\nAdded " .. response_counter .. " new endpoints.")
+                    print("Press [H] to return to the menu.")
+                end
+            end)
         end)
 
         onKeyDown(keyboard, code, "u", function()

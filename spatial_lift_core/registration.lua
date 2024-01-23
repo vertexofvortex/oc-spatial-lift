@@ -3,18 +3,23 @@ local utils = require("spatial_lift_core.utils")
 
 local registration = {}
 
-function registration.request(states)
+registration.request_progress = {
+    NO_MARKERS = {},
+    INITIATE = {},
+    REGISTRATED = {},
+    FINISH = {},
+}
+
+function registration.request(states, progress_callback)
+    local e = registration.request_progress
     states.registering_mode = true
 
     if utils.getStackInSlot(cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER) == nil then
-        print("Put 64 named markers in the first slot of internal buffer before initiating registration sequence.")
-
-        return false
+        progress_callback(e.NO_MARKERS, nil)
+        return
     end
 
-    local markers_count = utils.getStackInSlot(
-        cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER
-    ).size
+    local markers_count = utils.getStackInSlot(cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER).size
 
     utils.transferItem(
         cfg.transposer_sides.STORAGE,
@@ -25,16 +30,14 @@ function registration.request(states)
     )
 
     local request_timeout_timer = 0
-    local response_counter = 1
 
-    print("#", "Status  ", "Name\n")
+    progress_callback(e.INITIATE, nil)
 
     while true do
         if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT) ~= nil then
             request_timeout_timer = 0
 
-            print(response_counter, "ACCEPTED",
-                utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT).label)
+            progress_callback(e.REGISTRATED, utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT).label)
 
             local new_marker_slot = utils.getFirstAvailableSlot(
                 utils.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
@@ -49,13 +52,10 @@ function registration.request(states)
                 cfg.endchest_slots.REG_ACCEPT,
                 new_marker_slot
             )
-
-            response_counter = response_counter + 1
         end
 
         if request_timeout_timer >= 5 then
-            print("\nNo registration response has been detected in the last 5 seconds.")
-            print("Consider the registration completed.")
+            progress_callback(e.FINISH)
 
             local remaining_self_markers = utils.getStackInSlot(
                 cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST
@@ -71,7 +71,7 @@ function registration.request(states)
 
             states.registering_mode = false
 
-            return (markers_count - 1) - remaining_self_markers.size
+            return
         end
 
         request_timeout_timer = request_timeout_timer + 1
@@ -81,9 +81,15 @@ function registration.request(states)
     end
 end
 
-function registration.checkForRequests()
+registration.check_progress = {
+    REQUEST = {},
+    EXCHANGED = {},
+}
+
+function registration.checkForRequests(progress_callback)
+    local e = registration.check_progress
     if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST) == nil then
-        return false
+        return
     end
 
     if utils.getStackInSlot(
@@ -91,7 +97,7 @@ function registration.checkForRequests()
         ).label == utils.getStackInSlot(
             cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER
         ).label then
-        return false
+        return
     end
 
     while true do
@@ -100,14 +106,14 @@ function registration.checkForRequests()
         local storage_inventory = utils.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
 
         if utils.findItemByLabel(storage_inventory, request_item_stack.label) ~= nil then
-            return false
+            return
         end
 
         if utils.transferItem(
                 cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1, cfg.storage_slots.CURRENT_MARKER, cfg.endchest_slots.REG_ACCEPT
             ) == 1 then
-            print("Got a registration request from " .. request_item_stack.label .. ".")
-            print("Exchanging markers...")
+            
+            progress_callback(e.REQUEST, request_item_stack.label)
 
             local new_marker_slot = utils.getFirstAvailableSlot(
                 utils.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
@@ -119,9 +125,9 @@ function registration.checkForRequests()
                 new_marker_slot
             )
 
-            print("Markers exchange completed.")
+            progress_callback(e.EXCHANGED, nil)
 
-            return true
+            return
         end
     end
 end

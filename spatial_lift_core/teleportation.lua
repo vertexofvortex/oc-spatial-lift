@@ -3,15 +3,26 @@ local utils = require("spatial_lift_core.utils")
 
 local teleportation = {}
 
-function teleportation.request(teleporter_index)
+teleportation.request_progress = {
+    CELL_MISSING = {},
+    SELF_TELEPORT = {},
+    START_PINGING = {},
+    NO_RESPONSE = {},
+    ACCEPTED = {},
+    SUCCESS = {},
+}
+
+function teleportation.request(teleporter_index, progress_callback)
+    local e = teleportation.request_progress
+    
     if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.CELL_STORE) == nil then
-        print("The spatial cell is missing. Perhaps someone else is using the teleporter right now?")
-        return false
+        progress_callback(e.CELL_MISSING)
+        return
     end
 
     if teleporter_index == 1 then
-        print("Cannot teleport to self.")
-        return false
+        progress_callback(e.SELF_TELEPORT)
+        return
     end
 
     -- Put the cell into the temporary slot
@@ -33,7 +44,7 @@ function teleportation.request(teleporter_index)
         cfg.endchest_slots.TP_REQUEST
     )
 
-    print("Pinging destination endpoint...")
+    progress_callback(teleportation.request_progress.START_PINGING)
 
     while true do
         if ping_timer >= 5 then
@@ -54,14 +65,12 @@ function teleportation.request(teleporter_index)
                 cfg.endchest_slots.CELL_STORE
             )
 
-            print("Connection refused. Destination endpoint is unavailable.")
-            print("Check if teleporter is properly working and chunkloaded.")
-
-            return false
+            progress_callback(e.NO_RESPONSE)
+            return
         end
 
         if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.TP_ACCEPT) ~= nil then
-            print("Teleportation request accepted by destination endpoint!")
+            progress_callback(e.ACCEPTED)
             utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.PORT,
@@ -77,14 +86,13 @@ function teleportation.request(teleporter_index)
                 teleporter_index
             )
 
-            print("Teleporting in 3 seconds...")
-
             ---@diagnostic disable-next-line: undefined-field
             os.sleep(3)
 
             teleportation.initiate() -- always returns true
-
-            return true
+            
+            progress_callback(e.SUCCESS)
+            return
         end
 
         ping_timer = ping_timer + 1
@@ -102,20 +110,24 @@ function teleportation.initiate()
         cfg.port_slots.OUT,
         cfg.endchest_slots.CELL_SEND)
 
-    print("Teleportation...")
-
     return true
 end
 
-function teleportation.checkForRequests(teleporters)
+teleportation.check_progress = {
+    INCOMING = {},
+    TELEPORTATION_COMPLETED = {},
+}
+
+function teleportation.checkForRequests(teleporters, progress_callback)
+    local e = teleportation.check_progress
     local request_item = utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.TP_REQUEST)
 
     if request_item == nil then
-        return false
+        return
     end
 
     if request_item.label == teleporters[1] then
-        print("Incoming teleportation request accepted.")
+        progress_callback(e.INCOMING)
         utils.transferItem(cfg.transposer_sides.ENDCHEST,
             cfg.transposer_sides.ENDCHEST,
             1,
@@ -124,8 +136,8 @@ function teleportation.checkForRequests(teleporters)
         )
 
         teleportation.accept()
-
-        return true
+        progress_callback(e.TELEPORTATION_COMPLETED)
+        return
     end
 end
 
@@ -155,8 +167,6 @@ function teleportation.accept()
             break
         end
     end
-
-    print("Teleportation completed. Welcome aboard!")
 
     return true
 end
