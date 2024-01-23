@@ -2,8 +2,8 @@ local io = require("io")
 local shell = require("shell")
 local fs = require("filesystem")
 
-local utils = require("utils")
 local cfg = require("config")
+local utils = require("spatial_lift_core.utils")
 
 local updates = {}
 

@@ -2,18 +2,22 @@ local shell = require("shell")
 local args = { ... }
 local repo = "https://raw.githubusercontent.com/vertexofvortex/oc-spatial-lift/master/"
 local scripts = {
-    ["gui-lib"] = {},
-    [""] = {
-        "view_event_loop.lua",
+    ["gui_lib"] = {},
+    ["spatial_lift_core"] = {
         "core_event_loop.lua",
         "registration.lua",
         "teleportation.lua",
         "updates.lua",
         "utils.lua",
+    },
+    ["spatial_lift_view"] = {
+        "view_event_loop.lua",
+    },
+    [""] = {
         "installer.lua",
         "config.lua",
-        "version",
         "main.lua",
+        "version",
     },
 }
 

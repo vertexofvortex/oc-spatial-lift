@@ -1,5 +1,5 @@
-local utils = require("utils")
 local cfg = require("config")
+local utils = require("spatial_lift_core.utils")
 
 local registration = {}
 

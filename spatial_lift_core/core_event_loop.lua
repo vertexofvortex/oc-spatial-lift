@@ -1,10 +1,10 @@
 local os = require("os")
 
 local cfg = require("config")
-local registration = require("registration")
-local teleportation = require("teleportation")
-local updates = require("updates")
-local utils = require("utils")
+local registration = require("spatial_lift_core.registration")
+local teleportation = require("spatial_lift_core.teleportation")
+local updates = require("spatial_lift_core.updates")
+local utils = require("spatial_lift_core.utils")
 
 return function(states)
     local teleporters = utils.getDestinationTeleporters()
