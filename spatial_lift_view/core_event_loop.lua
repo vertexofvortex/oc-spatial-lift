@@ -1,7 +1,7 @@
 local threading = require("thread")
 local os = require("os")
 
-local cfg = require("config")
+local constants = require("constants")
 local version = require("version")
 local registration = require("spatial_lift_core.registration")
 local teleportation = require("spatial_lift_core.teleportation")
@@ -13,25 +13,25 @@ return function(state)
 
     while true do
         local call_state, traceback = pcall(function()
-            if state[1] == cfg.states.IDLE then
+            if state[1] == constants.states.IDLE then
                 local e = teleportation.check_progress
                 teleportation.checkForRequests(teleporters, function(progress)
                     if progress == e.INCOMING then
-                        state[1] = cfg.states.TELEPORTING
+                        state[1] = constants.states.TELEPORTING
                         print("Incoming teleportation request accepted.")
                         
                     elseif progress == e.TELEPORTATION_COMPLETED then
                         print("Teleportation completed. Welcome aboard!")
                     end
                 end)
-                state[1] = cfg.states.IDLE
+                state[1] = constants.states.IDLE
             end
 
-            if state[1] == cfg.states.IDLE then
+            if state[1] == constants.states.IDLE then
                 local e = registration.check_progress
                 registration.checkForRequests(function(progress, data)
                     if progress == e.REQUEST then
-                        state[1] = cfg.states.REGISTRATING
+                        state[1] = constants.states.REGISTRATING
                         print("Got a registration request from " .. data .. ".")
                         print("Exchanging markers...")
 
@@ -39,15 +39,15 @@ return function(state)
                         print("Markers exchange completed.")
                     end
                 end)
-                state[1] = cfg.states.IDLE
+                state[1] = constants.states.IDLE
             end
 
-            if state[1] == cfg.states.IDLE then
+            if state[1] == constants.states.IDLE then
                 local e = updates.check_progress
                 local i = version.install_progress
                 updates.checkForRequests(function(progress)
                     if progress == e.AVAILABLE then
-                        state[1] = cfg.states.UPDATING
+                        state[1] = constants.states.UPDATING
                         print("New version is available, updating...")
                         
                     elseif progress == i.FLOPPY_NOT_MOUNTED then
@@ -63,11 +63,11 @@ return function(state)
                         print("Update response accepted by a requesting endpoint. Restarting now...")
                         ---@diagnostic disable-next-line: undefined-field
                         os.sleep(1)
-                        state[1] = cfg.states.SHUTTING_DOWN
+                        state[1] = constants.states.SHUTTING_DOWN
                         threading.current():kill()
                     end
                 end)
-                state[1] = cfg.states.IDLE
+                state[1] = constants.states.IDLE
             end
         end)
 

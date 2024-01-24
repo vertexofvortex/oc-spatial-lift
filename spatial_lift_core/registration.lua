@@ -1,4 +1,5 @@
 local cfg = require("config")
+local constants = require("constants")
 local utils = require("spatial_lift_core.utils")
 
 local registration = {}
@@ -13,19 +14,19 @@ registration.request_progress = {
 function registration.request(progress_callback)
     local e = registration.request_progress
 
-    if utils.getStackInSlot(cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER) == nil then
+    if utils.getStackInSlot(cfg.transposer_sides.STORAGE, constants.storage_slots.CURRENT_MARKER) == nil then
         progress_callback(e.NO_MARKERS, nil)
         return
     end
 
-    local markers_count = utils.getStackInSlot(cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER).size
+    local markers_count = utils.getStackInSlot(cfg.transposer_sides.STORAGE, constants.storage_slots.CURRENT_MARKER).size
 
     utils.transferItem(
         cfg.transposer_sides.STORAGE,
         cfg.transposer_sides.ENDCHEST,
         markers_count - 1,
-        cfg.storage_slots.CURRENT_MARKER,
-        cfg.endchest_slots.REG_REQUEST
+        constants.storage_slots.CURRENT_MARKER,
+        constants.endchest_slots.REG_REQUEST
     )
 
     local request_timeout_timer = 0
@@ -33,10 +34,10 @@ function registration.request(progress_callback)
     progress_callback(e.INITIATE, nil)
 
     while true do
-        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT) ~= nil then
+        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.REG_ACCEPT) ~= nil then
             request_timeout_timer = 0
 
-            progress_callback(e.REGISTRATED, utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_ACCEPT).label)
+            progress_callback(e.REGISTRATED, utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.REG_ACCEPT).label)
 
             local new_marker_slot = utils.getFirstAvailableSlot(
                 utils.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
@@ -48,7 +49,7 @@ function registration.request(progress_callback)
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.STORAGE,
                 1,
-                cfg.endchest_slots.REG_ACCEPT,
+                constants.endchest_slots.REG_ACCEPT,
                 new_marker_slot
             )
         end
@@ -57,15 +58,15 @@ function registration.request(progress_callback)
             progress_callback(e.FINISH, nil)
 
             local remaining_self_markers = utils.getStackInSlot(
-                cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST
+                cfg.transposer_sides.ENDCHEST, constants.endchest_slots.REG_REQUEST
             )
 
             utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.STORAGE,
                 remaining_self_markers.size,
-                cfg.endchest_slots.REG_REQUEST,
-                cfg.storage_slots.CURRENT_MARKER
+                constants.endchest_slots.REG_REQUEST,
+                constants.storage_slots.CURRENT_MARKER
             )
             return
         end
@@ -84,21 +85,21 @@ registration.check_progress = {
 
 function registration.checkForRequests(progress_callback)
     local e = registration.check_progress
-    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST) == nil then
+    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.REG_REQUEST) == nil then
         return
     end
 
     if utils.getStackInSlot(
-            cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST
+            cfg.transposer_sides.ENDCHEST, constants.endchest_slots.REG_REQUEST
         ).label == utils.getStackInSlot(
-            cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER
+            cfg.transposer_sides.STORAGE, constants.storage_slots.CURRENT_MARKER
         ).label then
         return
     end
 
     while true do
         local request_item_stack = utils.getStackInSlot(cfg.transposer_sides.ENDCHEST,
-            cfg.endchest_slots.REG_REQUEST)
+            constants.endchest_slots.REG_REQUEST)
         local storage_inventory = utils.getAllStacks(cfg.transposer_sides.STORAGE).getAll()
 
         if utils.findItemByLabel(storage_inventory, request_item_stack.label) ~= nil then
@@ -106,7 +107,7 @@ function registration.checkForRequests(progress_callback)
         end
 
         if utils.transferItem(
-                cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1, cfg.storage_slots.CURRENT_MARKER, cfg.endchest_slots.REG_ACCEPT
+                cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1, constants.storage_slots.CURRENT_MARKER, constants.endchest_slots.REG_ACCEPT
             ) == 1 then
             
             progress_callback(e.REQUEST, request_item_stack.label)
@@ -117,7 +118,7 @@ function registration.checkForRequests(progress_callback)
 
             -- transposer.transferItem(inv.STORAGE, inv.ENDCHEST, 1, 1, slot.REG_ACCEPT)
             utils.transferItem(
-                cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.STORAGE, 1, cfg.endchest_slots.REG_REQUEST,
+                cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.STORAGE, 1, constants.endchest_slots.REG_REQUEST,
                 new_marker_slot
             )
 

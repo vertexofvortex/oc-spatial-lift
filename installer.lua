@@ -15,8 +15,11 @@ local scripts = {
     },
     [""] = {
         "installer.lua",
-        "config.lua",
         "main.lua",
+        "starter.lua",
+        "config.lua",
+        "constants.lua",
+        "uncacher.lua",
         "version.lua",
         "version",
     },

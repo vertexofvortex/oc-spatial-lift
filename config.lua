@@ -1,5 +1,11 @@
 local sides = require("sides")
 
+
+-- This configuration is local to just one teleporter
+-- Any changes made here won't be redistributed through the network
+-- Also this file won't be rewritten during updates
+
+-- USER CONFIGURATION STARTS HERE
 local config = {
     transposer_sides = {
         ENDCHEST = sides.top,
@@ -12,43 +18,15 @@ local config = {
         PORT = sides.bottom,
     },
 
-    endchest_slots = {
-        CELL_STORE = 27,
-        CELL_TEMPSTORE = 26,
-        CELL_SEND = 25,
-
-        TP_REQUEST = 24,
-        TP_ACCEPT = 23,
-
-        REG_REQUEST = 18,
-        REG_ACCEPT = 17,
-
-        UPD_BROADCAST = 10,
-        UPD_RESPONSE = 11,
-        UPD_RESPONSE_ACCEPT = 12,
-    },
-
-    storage_slots = {
-        CURRENT_MARKER = 1
-    },
-
-    port_slots = {
-        IN = 1,
-        OUT = 2,
-    },
-
-    states = {
-        IDLE = {},
-        TELEPORTING = {},
-        REGISTRATING = {},
-        UPDATING = {},
-        SHUTTING_DOWN = {},
-    },
-
     updates = {
         disable_updates = false,
         update_floppy_address = "54d",
     },
 }
+-- USER CONFIGURATION ENDS HERE
+
+
+-- The constants module includes default configuration in case something is missing
+local constants = require("constants")
 
 return config

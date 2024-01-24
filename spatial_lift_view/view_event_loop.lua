@@ -4,7 +4,7 @@ local event = require("event")
 local shell = require("shell")
 local os = require("os")
 
-local cfg = require("config")
+local constants = require("constants")
 local version = require("version")
 local registration = require("spatial_lift_core.registration")
 local teleportation = require("spatial_lift_core.teleportation")
@@ -36,11 +36,11 @@ return function(state)
     while true do
         local _, _, _, code, _ = event.pull("key_down")
 
-        if state[1] == cfg.states.IDLE then
+        if state[1] == constants.states.IDLE then
             onKeyDown(keyboard, code, "c", function()
                 if keyboard.isControlDown() then
                     print("Terminating...")
-                    state[1] = cfg.states.SHUTTING_DOWN
+                    state[1] = constants.states.SHUTTING_DOWN
                     threading.current():kill()
                 end
             end)
@@ -71,7 +71,7 @@ return function(state)
                         local _, _, _, code_confirmation, _ = event.pull("key_down")
 
                         onKeyDown(keyboard, code_confirmation, "y", function()
-                            state[1] = cfg.states.TELEPORTING
+                            state[1] = constants.states.TELEPORTING
                             print("")
                             local e = teleportation.request_progress
                             teleportation.request(teleporter_slot, function(progress)
@@ -100,7 +100,7 @@ return function(state)
                             
                             ---@diagnostic disable-next-line: undefined-field
                             os.sleep(5)
-                            state[1] = cfg.states.IDLE
+                            state[1] = constants.states.IDLE
                             shell.execute("clear")
                             print(help_prompt)
                         end)
@@ -118,7 +118,7 @@ return function(state)
             end)
 
             onKeyDown(keyboard, code, "r", function()
-                state[1] = cfg.states.REGISTRATING
+                state[1] = constants.states.REGISTRATING
                 local response_counter = 0
                 local e = registration.request_progress
                 registration.request(function(progress, data)
@@ -140,11 +140,11 @@ return function(state)
                         print("Press [H] to return to the menu.")
                     end
                 end)
-                state[1] = cfg.states.IDLE
+                state[1] = constants.states.IDLE
             end)
 
             onKeyDown(keyboard, code, "u", function()
-                state[1] = cfg.states.UPDATING
+                state[1] = constants.states.UPDATING
                 local e = updates.broadcast_progress
                 updates.broadcastUpdate(function(progress, data)
                     if progress == e.NO_FLOPPY then
@@ -176,7 +176,7 @@ return function(state)
                                     print("Update completed. Restarting now.")
                                     ---@diagnostic disable-next-line: undefined-field
                                     os.sleep(1)
-                                    state[1] = cfg.states.SHUTTING_DOWN
+                                    state[1] = constants.states.SHUTTING_DOWN
                                     threading.current():kill()
                                 end
                             end)
@@ -188,13 +188,13 @@ return function(state)
                         end)
                     end
                 end)
-                state[1] = cfg.states.IDLE
+                state[1] = constants.states.IDLE
             end)
-        elseif state[1] == cfg.states.REGISTRATING then
+        elseif state[1] == constants.states.REGISTRATING then
             print("There is currently an ongoing registration")
-        elseif state[1] == cfg.states.TELEPORTING then
+        elseif state[1] == constants.states.TELEPORTING then
             print("There is currently an ongoing teleportation")
-        elseif state[1] == cfg.states.UPDATING then
+        elseif state[1] == constants.states.UPDATING then
             print("There is currently an ongoing update")
         end
     end
