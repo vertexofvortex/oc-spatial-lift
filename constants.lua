@@ -56,13 +56,17 @@ local default_config = {
 -- User might have an outdated configuration file with missing values
 -- So we add missing information from the default config
 local cfg = require("config")
-for section, configs in pairs(default_config) do
-    if cfg[section] == nil then
-        cfg[section] = configs
-    else
-        for key, val in pairs(default_config[section]) do
-            if cfg[section][key] == nil then
-                cfg[section][key] = val
+if cfg == nil then
+    cfg = default_config
+else
+    for section, configs in pairs(default_config) do
+        if cfg[section] == nil then
+            cfg[section] = configs
+        else
+            for key, val in pairs(default_config[section]) do
+                if cfg[section][key] == nil then
+                    cfg[section][key] = val
+                end
             end
         end
     end
