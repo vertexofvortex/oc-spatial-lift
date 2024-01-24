@@ -82,7 +82,7 @@ function updates.checkForRequests(states, progress_callback)
         return
     end
 
-    if not updates.checkShouldUpdate(
+    if not version.checkShouldUpdate(
             tonumber(utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST).label)
         ) then
         return
