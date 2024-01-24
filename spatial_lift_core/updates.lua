@@ -11,7 +11,7 @@ updates.broadcast_progress = {
     TIMEOUT = {},
 }
 
-function updates.broadcastUpdate(states, progress_callback)
+function updates.broadcastUpdate(progress_callback)
     local e = updates.broadcast_progress
 
     if utils.getStackInSlot(cfg.transposer_sides.DRIVE, 1) == nil then
@@ -20,7 +20,6 @@ function updates.broadcastUpdate(states, progress_callback)
     end
 
     progress_callback(e.BROADCASTING, nil)
-    states.update_mode = true
 
     local update_responses = {}
     local request_timeout_timer = 0
@@ -58,7 +57,6 @@ function updates.broadcastUpdate(states, progress_callback)
                 1
             )
 
-            states.update_mode = false
             progress_callback(e.TIMEOUT)
             return
         end
@@ -75,7 +73,7 @@ updates.check_progress = {
     RESPONSE_ACCEPTED = {},
 }
 
-function updates.checkForRequests(states, progress_callback)
+function updates.checkForRequests(progress_callback)
     local e = updates.check_progress
 
     if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST) == nil then
@@ -86,11 +84,9 @@ function updates.checkForRequests(states, progress_callback)
             tonumber(utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST).label)
         ) then
         return
-    else
-        progress_callback(e.AVAILABLE)
     end
-
-    states.update_mode = true
+    
+    progress_callback(e.AVAILABLE)
 
     -- Waits until it can grab floppy disk from the update broadcast slot...
     while true do
@@ -123,7 +119,6 @@ function updates.checkForRequests(states, progress_callback)
     utils.transferItem(cfg.transposer_sides.DRIVE, cfg.transposer_sides.ENDCHEST, 1, 1,
         cfg.endchest_slots.UPD_BROADCAST)
 
-    states.update_mode = false
     progress_callback(e.RESPONSE_ACCEPTED)
 end
 

@@ -10,9 +10,8 @@ registration.request_progress = {
     FINISH = {},
 }
 
-function registration.request(states, progress_callback)
+function registration.request(progress_callback)
     local e = registration.request_progress
-    states.registering_mode = true
 
     if utils.getStackInSlot(cfg.transposer_sides.STORAGE, cfg.storage_slots.CURRENT_MARKER) == nil then
         progress_callback(e.NO_MARKERS, nil)
@@ -68,9 +67,6 @@ function registration.request(states, progress_callback)
                 cfg.endchest_slots.REG_REQUEST,
                 cfg.storage_slots.CURRENT_MARKER
             )
-
-            states.registering_mode = false
-
             return
         end
 

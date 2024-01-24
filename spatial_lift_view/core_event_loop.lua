@@ -8,25 +8,30 @@ local teleportation = require("spatial_lift_core.teleportation")
 local updates = require("spatial_lift_core.updates")
 local utils = require("spatial_lift_core.utils")
 
-return function(states)
+return function(state)
     local teleporters = utils.getDestinationTeleporters()
 
     while true do
-        local state, traceback = pcall(function()
-            local e = teleportation.check_progress
-            teleportation.checkForRequests(teleporters, function(progress)
-                if progress == e.INCOMING then
-                    print("Incoming teleportation request accepted.")
-                    
-                elseif progress == e.TELEPORTATION_COMPLETED then
-                    print("Teleportation completed. Welcome aboard!")
-                end
-            end)
+        local call_state, traceback = pcall(function()
+            if state[1] == cfg.states.IDLE then
+                local e = teleportation.check_progress
+                teleportation.checkForRequests(teleporters, function(progress)
+                    if progress == e.INCOMING then
+                        state[1] = cfg.states.TELEPORTING
+                        print("Incoming teleportation request accepted.")
+                        
+                    elseif progress == e.TELEPORTATION_COMPLETED then
+                        print("Teleportation completed. Welcome aboard!")
+                    end
+                end)
+                state[1] = cfg.states.IDLE
+            end
 
-            if not states.registering_mode then
+            if state[1] == cfg.states.IDLE then
                 local e = registration.check_progress
                 registration.checkForRequests(function(progress, data)
                     if progress == e.REQUEST then
+                        state[1] = cfg.states.REGISTRATING
                         print("Got a registration request from " .. data .. ".")
                         print("Exchanging markers...")
 
@@ -34,14 +39,15 @@ return function(states)
                         print("Markers exchange completed.")
                     end
                 end)
+                state[1] = cfg.states.IDLE
             end
 
-            -- TODO: check if in tp. or reg. process
-            if not states.update_mode then
+            if state[1] == cfg.states.IDLE then
                 local e = updates.check_progress
                 local i = version.install_progress
-                updates.checkForRequests(states, function(progress)
+                updates.checkForRequests(function(progress)
                     if progress == e.AVAILABLE then
+                        state[1] = cfg.states.UPDATING
                         print("New version is available, updating...")
                         
                     elseif progress == i.FLOPPY_NOT_MOUNTED then
@@ -57,14 +63,15 @@ return function(states)
                         print("Update response accepted by a requesting endpoint. Restarting now...")
                         ---@diagnostic disable-next-line: undefined-field
                         os.sleep(1)
-                        states.stop_execution = false
+                        state[1] = cfg.states.SHUTTING_DOWN
                         threading.current():kill()
                     end
                 end)
+                state[1] = cfg.states.IDLE
             end
         end)
 
-        if not state then
+        if not call_state then
             print(traceback)
         end
 

@@ -37,6 +37,14 @@ local config = {
         OUT = 2,
     },
 
+    states = {
+        IDLE = {},
+        TELEPORTING = {},
+        REGISTRATING = {},
+        UPDATING = {},
+        SHUTTING_DOWN = {},
+    },
+
     updates = {
         disable_updates = false,
         update_floppy_address = "8a6",

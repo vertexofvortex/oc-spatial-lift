@@ -1,5 +1,6 @@
 -- Libraries
 local threading = require("thread")
+local cfg = require("config")
 
 while true do
     -- Modules
@@ -7,15 +8,11 @@ while true do
     local view_event_loop = require("spatial_lift_view.view_event_loop")
 
     -- Variables
-    local states = {
-        registering_mode = false,
-        update_mode = false,
-        stop_execution = false,
-    }
+    local state = {cfg.states.IDLE}
 
     -- Threads
-    local core_thread = threading.create(core_event_loop, states)
-    local view_thread = threading.create(view_event_loop, states)
+    local core_thread = threading.create(core_event_loop, state)
+    local view_thread = threading.create(view_event_loop, state)
 
     threading.waitForAny({core_thread, view_thread})
 
@@ -33,10 +30,10 @@ while true do
     package.loaded["spatial_lift_core.updates"] = nil
     package.loaded["spatial_lift_core.utils"] = nil
 
-    -- If the stop_execution variable has not been set to true
+    -- If the state is not SHUTTING_DOWN
     -- Then either the program crashed
     -- Or an update has been installed and the program needs to be restarted
-    if states.stop_execution then
+    if state[1] == cfg.states.SHUTTING_DOWN then
         break
     end
 end
