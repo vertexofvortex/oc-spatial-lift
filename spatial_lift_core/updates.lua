@@ -1,97 +1,25 @@
-local io = require("io")
-local shell = require("shell")
-local fs = require("filesystem")
-
 local cfg = require("config")
+local version = require("version")
 local utils = require("spatial_lift_core.utils")
 
 local updates = {}
 
--- Get current program version from file
-function updates.getCurrentVersion()
-    local version_file = io.open("./version")
-    local version_text = version_file:read("*a")
-    local version = tonumber(version_text)
+updates.broadcast_progress = {
+    NO_FLOPPY = {},
+    BROADCASTING = {},
+    RESPONSE_DETECTED = {},
+    TIMEOUT = {},
+}
 
-    return version
-end
+function updates.broadcastUpdate(states, progress_callback)
+    local e = updates.broadcast_progress
 
--- Checks for an update requests in a background
-function updates.checkForRequests(states)
-    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST) == nil then
-        return false
-    end
-
-    if not updates.checkShouldUpdate(
-            tonumber(utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST).label)
-        ) then
-        print("Current version is newer or at least the same as available update. Skipping.")
-
-        return false
-    else
-        print("New version is available, updating...")
-    end
-
-    states.update_mode = true
-
-    -- Waits until it can grab floppy disk from the update broadcast slot...
-    while true do
-        if utils.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.DRIVE, 1,
-                cfg.endchest_slots.UPD_BROADCAST, 1) == 1 then
-            break
-        end
-    end
-
-    -- ...and then makes install
-    updates.install()
-
-    -- When installation completed/failed (doesn't matter), places it's marker item
-    -- to the update response slot
-    utils.transferItem(cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1,
-        cfg.storage_slots.CURRENT_MARKER, cfg.endchest_slots.UPD_RESPONSE)
-
-    -- Waits update response accept from the first endpoint
-    while true do
-        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE_ACCEPT) ~= nil then
-            print("Update response accepted by a requesting endpoint.")
-
-            break
-        end
-    end
-
-    -- Grabs it's own marker back to the storage
-    utils.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.STORAGE, 1,
-        cfg.endchest_slots.UPD_RESPONSE_ACCEPT, cfg.storage_slots.CURRENT_MARKER)
-
-    -- Returns back a floppy disk
-    utils.transferItem(cfg.transposer_sides.DRIVE, cfg.transposer_sides.ENDCHEST, 1, 1,
-        cfg.endchest_slots.UPD_BROADCAST)
-
-    states.update_mode = false
-end
-
--- Checks current version and new available version,
--- checks if updates disabled by configuration file.
--- Returns true if update should be installed and false if not
-function updates.checkShouldUpdate(update_version)
-    print(updates.getCurrentVersion())
-
-    if update_version > updates.getCurrentVersion() then
-        return true
-    else
-        return false
-    end
-end
-
-function updates.broadcastUpdate(states)
     if utils.getStackInSlot(cfg.transposer_sides.DRIVE, 1) == nil then
-        print("No floppy detected in the drive.")
-
-        return false
+        progress_callback(e.NO_FLOPPY, nil)
+        return
     end
 
-    print("Broadcasting the update...")
-
+    progress_callback(e.BROADCASTING, nil)
     states.update_mode = true
 
     local update_responses = {}
@@ -108,11 +36,8 @@ function updates.broadcastUpdate(states)
     while true do
         if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE) ~= nil then
             request_timeout_timer = 0
-
-            print("Detected response from " ..
-            utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label ..
-                ", consider this endpoint has installed an update.")
-
+            
+            progress_callback(e.RESPONSE_DETECTED, utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label)
             update_responses[utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label] = true
 
             utils.transferItem(
@@ -124,7 +49,7 @@ function updates.broadcastUpdate(states)
             )
         end
 
-        if request_timeout_timer >= 5 then
+        if request_timeout_timer >= 10 then
             utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.DRIVE,
@@ -133,11 +58,9 @@ function updates.broadcastUpdate(states)
                 1
             )
 
-            print("request timeout")
-
             states.update_mode = false
 
-            return update_responses
+            return
         end
 
         request_timeout_timer = request_timeout_timer + 1
@@ -147,54 +70,61 @@ function updates.broadcastUpdate(states)
     end
 end
 
--- Installs an update
-function updates.install()
-    local files = {
-        "installer.lua",
-        "main.lua",
-        "teleportation.lua",
-        "registration.lua",
-        "updates.lua",
-        "utils.lua",
-        "push.lua",
-        "pull.lua",
-        "version",
-    }
-    local mount_timeout_timer = 0
+updates.check_progress = {
+    AVAILABLE = {},
+    RESPONSE_ACCEPTED = {},
+}
 
+function updates.checkForRequests(states, progress_callback)
+    local e = updates.check_progress
+
+    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST) == nil then
+        return
+    end
+
+    if not updates.checkShouldUpdate(
+            tonumber(utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST).label)
+        ) then
+        return
+    else
+        progress_callback(e.AVAILABLE)
+    end
+
+    states.update_mode = true
+
+    -- Waits until it can grab floppy disk from the update broadcast slot...
     while true do
-        if fs.exists(string.format("/mnt/%s", cfg.updates.update_floppy_address)) then
-            print("Floppy filesystem mounted, copying files...")
-            mount_timeout_timer = 0
-
+        if utils.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.DRIVE, 1,
+                cfg.endchest_slots.UPD_BROADCAST, 1) == 1 then
             break
         end
+    end
 
-        if mount_timeout_timer > 5 then
-            print("Cannot mount update floppy, cancelling the update...")
+    -- ...and then makes install
+    version.install(progress_callback)
 
-            return false
+    -- When installation completed/failed (doesn't matter), places it's marker item
+    -- to the update response slot
+    utils.transferItem(cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1,
+        cfg.storage_slots.CURRENT_MARKER, cfg.endchest_slots.UPD_RESPONSE)
+
+    -- Waits update response accept from the first endpoint
+    while true do
+        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE_ACCEPT) ~= nil then
+            break
         end
-
-        mount_timeout_timer = mount_timeout_timer + 1
-
-        ---@diagnostic disable-next-line: undefined-field
-        os.sleep(1)
     end
 
-    for _, file in pairs(files) do
-        local status, traceback = pcall(function()
-            shell.execute(
-                string.format("cp /mnt/%s/%s ./%s", cfg.updates.update_floppy_address, file, file)
-            )
-        end)
+    -- Grabs it's own marker back to the storage
+    utils.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.STORAGE, 1,
+        cfg.endchest_slots.UPD_RESPONSE_ACCEPT, cfg.storage_slots.CURRENT_MARKER)
 
-        if not status then print(traceback) end
-    end
+    -- Returns back a floppy disk
+    utils.transferItem(cfg.transposer_sides.DRIVE, cfg.transposer_sides.ENDCHEST, 1, 1,
+        cfg.endchest_slots.UPD_BROADCAST)
 
-    print("Update completed.")
-
-    return true
+    states.update_mode = false
+    progress_callback(e.RESPONSE_ACCEPTED)
 end
 
 return updates

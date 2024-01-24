@@ -5,6 +5,7 @@ local shell = require("shell")
 local os = require("os")
 
 local cfg = require("config")
+local version = require("version")
 local registration = require("spatial_lift_core.registration")
 local teleportation = require("spatial_lift_core.teleportation")
 local updates = require("spatial_lift_core.updates")
@@ -25,6 +26,7 @@ return function(states)
         "Controls:\n\n" ..
         "[L]\t\tShow teleporters list\n" ..
         "[R]\t\tRegister current teleporter and sync with others\n" ..
+        "[U]\t\tBroadcast an update\n" ..
         "[H]\t\tShow this help page\n" ..
         "[Ctrl] + [C]\tTerminate program\n"
 
@@ -137,7 +139,49 @@ return function(states)
         end)
 
         onKeyDown(keyboard, code, "u", function()
-            updates.broadcastUpdate(states)
+            local e = updates.broadcast_progress
+            updates.broadcastUpdate(states, function(progress, data)
+                if progress == e.NO_FLOPPY then
+                    print("No floppy detected in the drive.")
+
+                elseif progress == e.BROADCASTING then
+                    print("Broadcasting the update...")
+                
+                elseif progress == e.RESPONSE_DETECTED then
+                    print("Detected response from " .. data .. ", consider this endpoint has installed an update.")
+
+                elseif progress == e.TIMEOUT then
+                    print("\nNo update response has been detected in the last 10 seconds.")
+                    print("Consider the update completed.")
+                    
+                    print("Should this computer be updated? Y/n")
+                    local _, _, _, code_confirmation, _ = event.pull("key_down")
+
+                    onKeyDown(keyboard, code_confirmation, "y", function()
+                        local e = version.install_progress
+                        version.install(function(progress)
+                            if progress == e.FLOPPY_NOT_MOUNTED then
+                                print("Cannot mount update floppy, cancelling the update...")
+                                
+                            elseif progress == e.FLOPPY_MOUNTED then
+                               print("Floppy filesystem mounted, copying files...")
+                                
+                            elseif progress == e.UPDATE_COMPLETED then
+                                print("Update completed. Restarting now.")
+                                ---@diagnostic disable-next-line: undefined-field
+                                os.sleep(1)
+                                states.stop_execution = true
+                                threading.current():kill()
+                            end
+                        end)
+                    end)
+
+                    onKeyDown(keyboard, code_confirmation, "n", function()
+                        shell.execute("clear")
+                        print(help_prompt)
+                    end)
+                end
+            end)
         end)
     end
 end

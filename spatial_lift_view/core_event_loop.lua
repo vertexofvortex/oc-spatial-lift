@@ -1,6 +1,8 @@
+local threading = require("thread")
 local os = require("os")
 
 local cfg = require("config")
+local version = require("version")
 local registration = require("spatial_lift_core.registration")
 local teleportation = require("spatial_lift_core.teleportation")
 local updates = require("spatial_lift_core.updates")
@@ -36,7 +38,29 @@ return function(states)
 
             -- TODO: check if in tp. or reg. process
             if not states.update_mode then
-                updates.checkForRequests(states)
+                local e = updates.check_progress
+                local i = version.install_progress
+                updates.checkForRequests(states, function(progress)
+                    if progress == e.AVAILABLE then
+                        print("New version is available, updating...")
+                        
+                    elseif progress == i.FLOPPY_NOT_MOUNTED then
+                        print("Cannot mount update floppy, cancelling the update...")
+                        
+                    elseif progress == i.FLOPPY_MOUNTED then
+                        print("Floppy filesystem mounted, copying files...")
+                        
+                    elseif progress == i.UPDATE_COMPLETED then
+                        print("Update completed.")
+                    
+                    elseif progress == e.RESPONSE_ACCEPTED then
+                        print("Update response accepted by a requesting endpoint. Restarting now...")
+                        ---@diagnostic disable-next-line: undefined-field
+                        os.sleep(1)
+                        states.stop_execution = true
+                        threading.current():kill()
+                    end
+                end)
             end
         end)
 

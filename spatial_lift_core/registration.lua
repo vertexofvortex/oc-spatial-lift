@@ -55,7 +55,7 @@ function registration.request(states, progress_callback)
         end
 
         if request_timeout_timer >= 5 then
-            progress_callback(e.FINISH)
+            progress_callback(e.FINISH, nil)
 
             local remaining_self_markers = utils.getStackInSlot(
                 cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.REG_REQUEST
