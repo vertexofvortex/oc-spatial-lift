@@ -5,11 +5,11 @@ local config = {
         ENDCHEST = sides.top,
         STORAGE = sides.north,
         PORT = sides.south,
-        DRIVE = sides.west,
+        DRIVE = sides.east,
     },
 
     redstone_sides = {
-        PORT = sides.north,
+        PORT = sides.bottom,
     },
 
     endchest_slots = {
@@ -37,9 +37,17 @@ local config = {
         OUT = 2,
     },
 
+    states = {
+        IDLE = {},
+        TELEPORTING = {},
+        REGISTRATING = {},
+        UPDATING = {},
+        SHUTTING_DOWN = {},
+    },
+
     updates = {
         disable_updates = false,
-        update_floppy_address = "8a6",
+        update_floppy_address = "54d",
     },
 }
 

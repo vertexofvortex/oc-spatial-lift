@@ -2,17 +2,34 @@ local shell = require("shell")
 local args = { ... }
 local repo = "https://raw.githubusercontent.com/vertexofvortex/oc-spatial-lift/master/"
 local scripts = {
-    "installer.lua",
-    "main.lua",
-    "teleportation.lua",
-    "registration.lua",
-    "updates.lua",
-    "utils.lua",
-    "push.lua",
-    "pull.lua",
-    "config.lua",
-    "version",
+    ["gui_lib"] = {},
+    ["spatial_lift_core"] = {
+        "registration.lua",
+        "teleportation.lua",
+        "updates.lua",
+        "utils.lua",
+    },
+    ["spatial_lift_view"] = {
+        "core_event_loop.lua",
+        "view_event_loop.lua",
+    },
+    [""] = {
+        "installer.lua",
+        "config.lua",
+        "main.lua",
+        "version.lua",
+        "version",
+    },
 }
-for i = 1, #scripts do
-    shell.execute("wget -f " .. repo .. "/" .. scripts[i])
+
+for dir, files in pairs(scripts) do
+    local path = ""
+    if dir ~= "" then
+        path = dir .. "/"
+        shell.execute("mkdir " .. dir)
+    end
+
+    for i = 1, #files do
+        shell.execute("wget -f " .. repo .. "/" .. path .. files[i] .. " " .. path .. files[i])
+    end
 end

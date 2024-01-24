@@ -1,142 +1,39 @@
 -- Libraries
 local threading = require("thread")
-local component = require("component")
-local sides = require("sides")
-local shell = require("shell")
-local keyboard = require("keyboard")
-local event = require("event")
+local cfg = require("config")
 
--- Modules
-local utils = require("utils")
-local teleportation = require("teleportation")
-local registration = require("registration")
-local updates = require("updates")
+while true do
+    -- Modules
+    local core_event_loop = require("spatial_lift_view.core_event_loop")
+    local view_event_loop = require("spatial_lift_view.view_event_loop")
 
--- Components
-local transposer = component.proxy(component.list("transposer")())
-local redstone = component.proxy(component.list("redstone")())
+    -- Variables
+    local state = {cfg.states.IDLE}
 
--- Variables
+    -- Threads
+    local core_thread = threading.create(core_event_loop, state)
+    local view_thread = threading.create(view_event_loop, state)
 
-local states = {
-    registering_mode = false,
-    update_mode = false,
-}
+    threading.waitForAny({core_thread, view_thread})
 
-local main_thread = threading.create(function()
-    local teleporters = utils.getDestinationTeleporters(transposer)
+    core_thread:kill()
+    view_thread:kill()
 
-    while true do
-        local state, traceback = pcall(function()
-            teleportation.checkForRequests(transposer, teleporters, redstone)
+    -- OpenOS caches the modules, so it's better to forcefully unload them
+    -- if we want the update to apply correctly
+    package.loaded["config"] = nil
+    package.loaded["version"] = nil
+    package.loaded["spatial_lift_view.core_event_loop"] = nil
+    package.loaded["spatial_lift_view.view_event_loop"] = nil
+    package.loaded["spatial_lift_core.registration"] = nil
+    package.loaded["spatial_lift_core.teleportation"] = nil
+    package.loaded["spatial_lift_core.updates"] = nil
+    package.loaded["spatial_lift_core.utils"] = nil
 
-            if not states.registering_mode then
-                registration.checkForRequests(transposer)
-            end
-
-            -- TODO: check if in tp. or reg. process
-            if not states.update_mode then
-                updates.checkForRequests(transposer, states)
-            end
-        end)
-
-        if not state then
-            print(traceback)
-        end
-
-        ---@diagnostic disable-next-line: undefined-field
-        os.sleep(1)
+    -- If the state is not SHUTTING_DOWN
+    -- Then either the program crashed
+    -- Or an update has been installed and the program needs to be restarted
+    if state[1] == cfg.states.SHUTTING_DOWN then
+        break
     end
-end)
-
--- A thread for the program control
-local control_thread = threading.create(function()
-    local help_prompt =
-        "+--------------------------------------+\n" ..
-        "| Welcome to The Spatial Lift program! |\n" ..
-        "+--------------------------------------+\n\n" ..
-        "Version " .. updates.getCurrentVersion() .. "\n\n" ..
-        "Controls:\n\n" ..
-        "[L]\t\tShow teleporters list\n" ..
-        "[R]\t\tRegister current teleporter and sync with others\n" ..
-        "[H]\t\tShow this help page\n" ..
-        "[Ctrl] + [C]\tTerminate program\n"
-
-    shell.execute("clear")
-    print(help_prompt)
-
-    while true do
-        local _, _, _, code, _ = event.pull("key_down")
-
-        utils.onKeyDown(keyboard, code, "c", function()
-            if keyboard.isControlDown() then
-                print("Terminating...")
-
-                main_thread:kill()
-                ---@diagnostic disable-next-line: undefined-global
-                control_thread:kill()
-            end
-        end)
-
-        utils.onKeyDown(keyboard, code, "h", function()
-            shell.execute("clear")
-            print(help_prompt)
-        end)
-
-        utils.onKeyDown(keyboard, code, "l", function()
-            shell.execute("clear")
-            local teleporters = utils.getDestinationTeleporters(transposer)
-
-            print("Available destinations:\n")
-
-            for slot, teleporter_name in pairs(teleporters) do
-                print("[" .. slot .. "]", teleporter_name)
-            end
-
-            print("\nPress the corresponding button to teleport\n")
-
-            local _, _, _, code_teleport, _ = event.pull("key_down")
-
-            for teleporter_slot, teleporter_name in pairs(teleporters) do
-                utils.onKeyDown(keyboard, code_teleport, tostring(teleporter_slot), function()
-                    print("Are you sure you want to teleport to " .. teleporter_name .. " destination? Y/n")
-
-                    local _, _, _, code_confirmation, _ = event.pull("key_down")
-
-                    utils.onKeyDown(keyboard, code_confirmation, "y", function()
-                        print("")
-                        teleportation.request(transposer, teleporter_slot, redstone)
-                        print("Teleported successfully!")
-
-                        ---@diagnostic disable-next-line: undefined-field
-                        os.sleep(5)
-                        shell.execute("clear")
-                        print(help_prompt)
-                    end)
-
-                    utils.onKeyDown(keyboard, code_confirmation, "n", function()
-                        print("Cancelling...")
-
-                        ---@diagnostic disable-next-line: undefined-field
-                        os.sleep(1)
-                        shell.execute("clear")
-                        print(help_prompt)
-                    end)
-                end)
-            end
-        end)
-
-        utils.onKeyDown(keyboard, code, "r", function()
-            print("Endpoint registration sequence started (timeout: 5s.)...\n")
-
-            local status = registration.request(transposer, states)
-
-            print("\nAdded " .. status .. " new endpoints.")
-            print("Press [H] to return to the menu.")
-        end)
-
-        utils.onKeyDown(keyboard, code, "u", function()
-            updates.broadcastUpdate(transposer, states)
-        end)
-    end
-end)
+end
