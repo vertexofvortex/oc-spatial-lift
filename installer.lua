@@ -17,6 +17,7 @@ local scripts = {
         "installer.lua",
         "config.lua",
         "main.lua",
+        "version.lua",
         "version",
     },
 }
