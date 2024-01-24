@@ -5,7 +5,7 @@ local config = {
         ENDCHEST = sides.top,
         STORAGE = sides.north,
         PORT = sides.south,
-        DRIVE = sides.west,
+        DRIVE = sides.east,
     },
 
     redstone_sides = {
@@ -47,7 +47,7 @@ local config = {
 
     updates = {
         disable_updates = false,
-        update_floppy_address = "8a6",
+        update_floppy_address = "54d",
     },
 }
 
