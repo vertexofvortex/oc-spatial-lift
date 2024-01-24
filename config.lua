@@ -1,6 +1,5 @@
 local sides = require("sides")
 
-
 -- This configuration is local to just one teleporter
 -- Any changes made here won't be redistributed through the network
 -- Also this file won't be rewritten during updates
@@ -24,9 +23,5 @@ local config = {
     },
 }
 -- USER CONFIGURATION ENDS HERE
-
-
--- The constants module includes default configuration in case something is missing
-local constants = require("constants")
 
 return config
