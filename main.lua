@@ -1,39 +1,25 @@
--- Libraries
-local threading = require("thread")
-local cfg = require("config")
+-- NOTE: This file is supposed to be as minimalistic as possible
+--       because it won't be reloaded when installing an update
+--       DO NOT edit unless it's something really crucial
 
 while true do
-    -- Modules
-    local core_event_loop = require("spatial_lift_view.core_event_loop")
-    local view_event_loop = require("spatial_lift_view.view_event_loop")
-
-    -- Variables
-    local state = {cfg.states.IDLE}
-
-    -- Threads
-    local core_thread = threading.create(core_event_loop, state)
-    local view_thread = threading.create(view_event_loop, state)
-
-    threading.waitForAny({core_thread, view_thread})
-
-    core_thread:kill()
-    view_thread:kill()
-
     -- OpenOS caches the modules, so it's better to forcefully unload them
-    -- if we want the update to apply correctly
-    package.loaded["config"] = nil
-    package.loaded["version"] = nil
-    package.loaded["spatial_lift_view.core_event_loop"] = nil
-    package.loaded["spatial_lift_view.view_event_loop"] = nil
-    package.loaded["spatial_lift_core.registration"] = nil
-    package.loaded["spatial_lift_core.teleportation"] = nil
-    package.loaded["spatial_lift_core.updates"] = nil
-    package.loaded["spatial_lift_core.utils"] = nil
+    -- if we want the updates to apply correctly    
+    package.loaded["uncacher"] = nil
+    require("uncacher")
 
+    -- Needed to determine whether we need to close or restart the app
+    local constants = require("constants")
+    local state = {constants.states.IDLE}
+    
+    -- Start the app
+    local starter = require("starter")
+    starter(state)
+    
     -- If the state is not SHUTTING_DOWN
-    -- Then either the program crashed
+    -- Then either the program has crashed
     -- Or an update has been installed and the program needs to be restarted
-    if state[1] == cfg.states.SHUTTING_DOWN then
+    if state[1] == constants.states.SHUTTING_DOWN then
         break
     end
 end

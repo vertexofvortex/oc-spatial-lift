@@ -55,11 +55,11 @@ function version.install(progress_callback)
     end
 
     -- First save the config file
-    -- shell.execute("mv config.lua config.lua.local")
+    shell.execute("mv config.lua config.lua.local")
     -- Copy everything from the floppy
     shell.execute("cp -r /mnt/" .. cfg.updates.update_floppy_address .. "/* ./")
     -- Restore the original config
-    -- shell.execute("mv config.lua.local config.lua") 
+    shell.execute("mv config.lua.local config.lua") 
 
     progress_callback(e.UPDATE_COMPLETED)
 end

@@ -1,4 +1,5 @@
 local cfg = require("config")
+local constants = require("constants")
 local utils = require("spatial_lift_core.utils")
 
 local teleportation = {}
@@ -15,7 +16,7 @@ teleportation.request_progress = {
 function teleportation.request(teleporter_index, progress_callback)
     local e = teleportation.request_progress
     
-    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.CELL_STORE) == nil then
+    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.CELL_STORE) == nil then
         progress_callback(e.CELL_MISSING)
         return
     end
@@ -30,8 +31,8 @@ function teleportation.request(teleporter_index, progress_callback)
         cfg.transposer_sides.ENDCHEST,
         cfg.transposer_sides.ENDCHEST,
         1,
-        cfg.endchest_slots.CELL_STORE,
-        cfg.endchest_slots.CELL_TEMPSTORE
+        constants.endchest_slots.CELL_STORE,
+        constants.endchest_slots.CELL_TEMPSTORE
     )
 
     local ping_timer = 0
@@ -41,7 +42,7 @@ function teleportation.request(teleporter_index, progress_callback)
         cfg.transposer_sides.ENDCHEST,
         1,
         teleporter_index,
-        cfg.endchest_slots.TP_REQUEST
+        constants.endchest_slots.TP_REQUEST
     )
 
     progress_callback(teleportation.request_progress.START_PINGING)
@@ -52,7 +53,7 @@ function teleportation.request(teleporter_index, progress_callback)
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.STORAGE,
                 1,
-                cfg.endchest_slots.TP_REQUEST,
+                constants.endchest_slots.TP_REQUEST,
                 teleporter_index
             )
 
@@ -61,28 +62,28 @@ function teleportation.request(teleporter_index, progress_callback)
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.ENDCHEST,
                 1,
-                cfg.endchest_slots.CELL_TEMPSTORE,
-                cfg.endchest_slots.CELL_STORE
+                constants.endchest_slots.CELL_TEMPSTORE,
+                constants.endchest_slots.CELL_STORE
             )
 
             progress_callback(e.NO_RESPONSE)
             return
         end
 
-        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.TP_ACCEPT) ~= nil then
+        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.TP_ACCEPT) ~= nil then
             progress_callback(e.ACCEPTED)
             utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.PORT,
                 1,
-                cfg.endchest_slots.CELL_TEMPSTORE,
-                cfg.port_slots.IN
+                constants.endchest_slots.CELL_TEMPSTORE,
+                constants.port_slots.IN
             )
             utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.STORAGE,
                 1,
-                cfg.endchest_slots.TP_ACCEPT,
+                constants.endchest_slots.TP_ACCEPT,
                 teleporter_index
             )
 
@@ -107,8 +108,8 @@ function teleportation.initiate()
         cfg.transposer_sides.PORT,
         cfg.transposer_sides.ENDCHEST,
         1,
-        cfg.port_slots.OUT,
-        cfg.endchest_slots.CELL_SEND)
+        constants.port_slots.OUT,
+        constants.endchest_slots.CELL_SEND)
 
     return true
 end
@@ -120,7 +121,7 @@ teleportation.check_progress = {
 
 function teleportation.checkForRequests(teleporters, progress_callback)
     local e = teleportation.check_progress
-    local request_item = utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.TP_REQUEST)
+    local request_item = utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.TP_REQUEST)
 
     if request_item == nil then
         return
@@ -131,8 +132,8 @@ function teleportation.checkForRequests(teleporters, progress_callback)
         utils.transferItem(cfg.transposer_sides.ENDCHEST,
             cfg.transposer_sides.ENDCHEST,
             1,
-            cfg.endchest_slots.TP_REQUEST,
-            cfg.endchest_slots.TP_ACCEPT
+            constants.endchest_slots.TP_REQUEST,
+            constants.endchest_slots.TP_ACCEPT
         )
 
         teleportation.accept()
@@ -146,22 +147,22 @@ function teleportation.accept()
         if
             utils.getStackInSlot(
                 cfg.transposer_sides.ENDCHEST,
-                cfg.endchest_slots.CELL_SEND
+                constants.endchest_slots.CELL_SEND
             ) ~= nil then
             utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.PORT,
                 1,
-                cfg.endchest_slots.CELL_SEND,
-                cfg.port_slots.IN
+                constants.endchest_slots.CELL_SEND,
+                constants.port_slots.IN
             )
             utils.toggleSpatialIO()
             utils.transferItem(
                 cfg.transposer_sides.PORT,
                 cfg.transposer_sides.ENDCHEST,
                 1,
-                cfg.port_slots.OUT,
-                cfg.endchest_slots.CELL_STORE
+                constants.port_slots.OUT,
+                constants.endchest_slots.CELL_STORE
             )
 
             break

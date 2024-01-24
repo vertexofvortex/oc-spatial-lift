@@ -1,4 +1,5 @@
 local cfg = require("config")
+local constants = require("constants")
 local version = require("version")
 local utils = require("spatial_lift_core.utils")
 
@@ -29,22 +30,22 @@ function updates.broadcastUpdate(progress_callback)
         cfg.transposer_sides.ENDCHEST,
         1,
         1,
-        cfg.endchest_slots.UPD_BROADCAST
+        constants.endchest_slots.UPD_BROADCAST
     )
 
     while true do
-        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE) ~= nil then
+        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.UPD_RESPONSE) ~= nil then
             request_timeout_timer = 0
             
-            progress_callback(e.RESPONSE_DETECTED, utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label)
-            update_responses[utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE).label] = true
+            progress_callback(e.RESPONSE_DETECTED, utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.UPD_RESPONSE).label)
+            update_responses[utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.UPD_RESPONSE).label] = true
 
             utils.transferItem(
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.ENDCHEST,
                 1,
-                cfg.endchest_slots.UPD_RESPONSE,
-                cfg.endchest_slots.UPD_RESPONSE_ACCEPT
+                constants.endchest_slots.UPD_RESPONSE,
+                constants.endchest_slots.UPD_RESPONSE_ACCEPT
             )
         end
 
@@ -53,7 +54,7 @@ function updates.broadcastUpdate(progress_callback)
                 cfg.transposer_sides.ENDCHEST,
                 cfg.transposer_sides.DRIVE,
                 1,
-                cfg.endchest_slots.UPD_BROADCAST,
+                constants.endchest_slots.UPD_BROADCAST,
                 1
             )
 
@@ -76,12 +77,12 @@ updates.check_progress = {
 function updates.checkForRequests(progress_callback)
     local e = updates.check_progress
 
-    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST) == nil then
+    if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.UPD_BROADCAST) == nil then
         return
     end
 
     if not version.checkShouldUpdate(
-            tonumber(utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_BROADCAST).label)
+            tonumber(utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.UPD_BROADCAST).label)
         ) then
         return
     end
@@ -91,7 +92,7 @@ function updates.checkForRequests(progress_callback)
     -- Waits until it can grab floppy disk from the update broadcast slot...
     while true do
         if utils.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.DRIVE, 1,
-                cfg.endchest_slots.UPD_BROADCAST, 1) == 1 then
+            constants.endchest_slots.UPD_BROADCAST, 1) == 1 then
             break
         end
     end
@@ -102,22 +103,22 @@ function updates.checkForRequests(progress_callback)
     -- When installation completed/failed (doesn't matter), places it's marker item
     -- to the update response slot
     utils.transferItem(cfg.transposer_sides.STORAGE, cfg.transposer_sides.ENDCHEST, 1,
-        cfg.storage_slots.CURRENT_MARKER, cfg.endchest_slots.UPD_RESPONSE)
+        constants.storage_slots.CURRENT_MARKER, constants.endchest_slots.UPD_RESPONSE)
 
     -- Waits update response accept from the first endpoint
     while true do
-        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, cfg.endchest_slots.UPD_RESPONSE_ACCEPT) ~= nil then
+        if utils.getStackInSlot(cfg.transposer_sides.ENDCHEST, constants.endchest_slots.UPD_RESPONSE_ACCEPT) ~= nil then
             break
         end
     end
 
     -- Grabs it's own marker back to the storage
     utils.transferItem(cfg.transposer_sides.ENDCHEST, cfg.transposer_sides.STORAGE, 1,
-        cfg.endchest_slots.UPD_RESPONSE_ACCEPT, cfg.storage_slots.CURRENT_MARKER)
+        constants.endchest_slots.UPD_RESPONSE_ACCEPT, constants.storage_slots.CURRENT_MARKER)
 
     -- Returns back a floppy disk
     utils.transferItem(cfg.transposer_sides.DRIVE, cfg.transposer_sides.ENDCHEST, 1, 1,
-        cfg.endchest_slots.UPD_BROADCAST)
+        constants.endchest_slots.UPD_BROADCAST)
 
     progress_callback(e.RESPONSE_ACCEPTED)
 end
