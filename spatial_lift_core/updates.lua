@@ -59,7 +59,7 @@ function updates.broadcastUpdate(states, progress_callback)
             )
 
             states.update_mode = false
-
+            progress_callback(e.TIMEOUT)
             return
         end
 
