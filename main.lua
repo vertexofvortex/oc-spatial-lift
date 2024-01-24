@@ -19,11 +19,8 @@ while true do
 
     threading.waitForAny({core_thread, view_thread})
 
-    if core_thread:status() == "running" then
-        core_thread:kill()
-    elseif view_thread:status() == "running" then
-        view_thread:kill()
-    end
+    core_thread:kill()
+    view_thread:kill()
 
     -- If the stop_execution variable has not been set to true
     -- Then either the program crashed

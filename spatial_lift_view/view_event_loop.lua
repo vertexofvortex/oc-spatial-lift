@@ -22,7 +22,7 @@ return function(states)
         "+--------------------------------------+\n" ..
         "| Welcome to The Spatial Lift program! |\n" ..
         "+--------------------------------------+\n\n" ..
-        "Version " .. updates.getCurrentVersion() .. "\n\n" ..
+        "Version " .. version.getCurrentVersion() .. "\n\n" ..
         "Controls:\n\n" ..
         "[L]\t\tShow teleporters list\n" ..
         "[R]\t\tRegister current teleporter and sync with others\n" ..
