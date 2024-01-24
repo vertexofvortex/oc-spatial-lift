@@ -22,6 +22,17 @@ while true do
     core_thread:kill()
     view_thread:kill()
 
+    -- OpenOS caches the modules, so it's better to forcefully unload them
+    -- if we want the update to apply correctly
+    package.loaded.config = nil
+    package.loaded.version = nil
+    package.loaded.spatial_lift_view.core_event_loop = nil
+    package.loaded.spatial_lift_view.view_event_loop = nil
+    package.loaded.spatial_lift_core.registration = nil
+    package.loaded.spatial_lift_core.teleportation = nil
+    package.loaded.spatial_lift_core.updates = nil
+    package.loaded.spatial_lift_core.utils = nil
+
     -- If the stop_execution variable has not been set to true
     -- Then either the program crashed
     -- Or an update has been installed and the program needs to be restarted
