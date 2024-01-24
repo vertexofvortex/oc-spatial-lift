@@ -170,7 +170,7 @@ return function(states)
                                 print("Update completed. Restarting now.")
                                 ---@diagnostic disable-next-line: undefined-field
                                 os.sleep(1)
-                                states.stop_execution = true
+                                states.stop_execution = false
                                 threading.current():kill()
                             end
                         end)
